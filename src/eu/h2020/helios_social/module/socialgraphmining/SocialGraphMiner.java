@@ -6,6 +6,11 @@ import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
 import eu.h2020.helios_social.core.contextualegonetwork.Edge;
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 
+/**
+ * Provides an abstraction of the basic capabilities and requirements of mining module algorithms.
+ * 
+ * @author Emmanouil Krasanakis
+ */
 public abstract class SocialGraphMiner {
 	protected SocialGraphMiner(ContextualEgoNetwork contextualEgoNetwork) {
 	}
@@ -18,6 +23,7 @@ public abstract class SocialGraphMiner {
 	 * Makes the graph miner aware that a user received an interaction from another user with {@link #getModelParameters}.
 	 * @param interaction A new interaction the user initiates expressed in terms of the contextual ego network
 	 * @param neighborModelParameters The neighbor parameters to 
+	 * @param isReply Whether the interaction is a "message received" acknowledgement. Typically, this would be false.
 	 */
     public abstract void newInteraction(Interaction interaction, String neighborModelParameters, boolean isReply);
     /**

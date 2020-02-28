@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"eu.h2020.helios_social.module.socialgraphmining"},{"l":"eu.h2020.helios_social.module.socialgraphmining.GNN"}]
