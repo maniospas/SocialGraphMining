@@ -5,6 +5,9 @@ This module aims to provide dynamic machine learning capabilities to HELIOS user
 In particular, each user (or, more precisely, their HELIOS device) carries a different instance of this module 
 and needs to account for its capabilities to facilitate recommendation tasks. 
 
+## Dependencies
+This module depends on eu.h2020.helios_social.core.contextualegonetwork 
+
 ## API Usage
 Here we provide example usage of this module's Graph Neural Network (GNN) miner to facilitate recommendation capabilities:
 ```java
