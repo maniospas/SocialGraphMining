@@ -1,4 +1,4 @@
-package eu.h2020.helios_social.module.socialgraphmining.GNN;
+package eu.h2020.helios_social.module.socialgraphmining.GNN.operations;
 
 import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 
@@ -14,6 +14,8 @@ public class Tensor {
 	 * @param expr A serialized tensor
 	 */
 	public Tensor(String expr) {
+		if(expr==null || expr.isEmpty())
+			Utils.error("Cannot create tensor from a null expression or empty string");
 		if(expr.length()==0) {
 			values = new double[0];
 			return;
@@ -30,10 +32,11 @@ public class Tensor {
 	public Tensor(int size) {
 		values = new double[size];
 	}
+	protected Tensor() {}
 	/**
 	 * Set tensor elements to random values in the range [0,1]
 	 */
-	public void setRandom() {
+	public void setToRandom() {
 		for(int i=0;i<size();i++)
 			put(i, Math.random());
 	}
@@ -66,8 +69,7 @@ public class Tensor {
 		return values[pos];
 	}
 	/**
-	 * Add a value to a tensor element. All tensor operations use this function to wrap
-	 * element assignments.
+	 * Add a value to a tensor element.
 	 * @param pos The position of the tensor element
 	 * @param value The value to assign
 	 * @see #put(int, double)
@@ -175,8 +177,10 @@ public class Tensor {
 		return Math.sqrt(res);
 	}
 	/**
+	 * A string serialization of the tensor that can be used by the constructor {@link #Tensor(String)} to create an identical copy.
 	 * @return A serialization of the tensor.
 	 */
+	@Override
 	public String toString() {
 		StringBuilder res = new StringBuilder();
 		if(size()!=0)
@@ -201,7 +205,7 @@ public class Tensor {
 	 * L2-normalizes the tensor elements
 	 * @see #normalized()
 	 */
-	public void setNormalize() {
+	public void setToNormalized() {
 		double norm = norm();
 		if(norm!=0)
 			for(int i=0;i<values.length;i++)
@@ -210,21 +214,21 @@ public class Tensor {
 	/**
 	 * Set all tensor element values to 1/{@link #size()}
 	 */
-	public void setUniform() {
+	public void setToUniform() {
 		for(int i=0;i<values.length;i++)
 			put(i, 1./values.length);
 	}
 	/**
 	 * Set all tensor element values to 1
 	 */
-	public void setOnes() {
+	public void setToOnes() {
 		for(int i=0;i<values.length;i++)
 			put(i, 1.);
 	}
 	/**
 	 * Set all tensor element values to 0
 	 */
-	public void setZero() {
+	public void setToZero() {
 		for(int i=0;i<values.length;i++)
 			put(i, 0.);
 	}
