@@ -1,7 +1,11 @@
 package eu.h2020.helios_social.module.socialgraphmining;
 
+import java.util.HashMap;
+
+import eu.h2020.helios_social.core.contextualegonetwork.Context;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
+import eu.h2020.helios_social.core.contextualegonetwork.Node;
 
 /**
  * Provides an abstraction of the basic capabilities and requirements of mining module algorithms.
@@ -32,18 +36,23 @@ public abstract class SocialGraphMiner {
      */
     public abstract String getModelParameters(Interaction interaction);
     /**
-     * Predicts the weight of outgoing interactions
-     * @return A map of edge weights.
+     * Predicts the weight of performing a SEND interaction between the given context's ego and a destination node.
+     * @param context The context in which to perform the prediction.
+     * @param destinationNode The destination node of the interaction.
+     * @return The weight of performing the interaction (higher values are more likely).
      */
-    //public abstract Map<Edge, Double> predictOutgoingInteractions();
+    public abstract double predictNewInteraction(Context context, Node destinationNode);
     /**
-     * Provides various measures concerning the efficacy of predicting the given interaction using
-     * the {@link #predictOutgoingInteractions()} method.
-     * Needs be called before this interaction is registered (e.g. with {@link #newInteraction}.
-     * Some of these measures assume binary (0/1) values and need be averaged across many interactions
-     * to provide meaningful insights.
-     * @param interaction The interaction to evaluate, expressed in terms of the contextual ego network
-     * @return A hashmap between measures and values.
+     * Calls the {@link #predictNewInteraction(Context, Node)} met
+     * @param context The context for which to recommend interactions.
+     * @return A hash map of node scores (larger is more likely to occur.
      */
-    //public abstract Map<String, Double> evaluate(Interaction interaction);
+    public HashMap<Node, Double> recommendInteractions(Context context) {
+    	HashMap<Node, Double> scores = new HashMap<Node, Double>();
+    	Node ego = context.getContextualEgoNetwork().getEgo();
+    	for(Node node : context.getNodes())
+    		if(node!=ego)
+    			scores.put(node, predictNewInteraction(context, node));
+    	return scores;
+    }
 }

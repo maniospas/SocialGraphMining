@@ -4,10 +4,12 @@ package eu.h2020.helios_social.module.socialgraphmining.GNN;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import eu.h2020.helios_social.core.contextualegonetwork.Context;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
 import eu.h2020.helios_social.core.contextualegonetwork.Edge;
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 import eu.h2020.helios_social.core.contextualegonetwork.Node;
+import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 import eu.h2020.helios_social.module.socialgraphmining.SocialGraphMiner;
 import eu.h2020.helios_social.module.socialgraphmining.GNN.operations.Loss;
 import eu.h2020.helios_social.module.socialgraphmining.GNN.operations.Tensor;
@@ -50,7 +52,7 @@ public class GNNMiner extends SocialGraphMiner {
 	@Override
 	public String getModelParameters(Interaction interaction) {
 		if(interaction==null)
-			return this.getContextualEgoNetwork().getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().toString();
+			return getContextualEgoNetwork().getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().toString();
 		return interaction.getEdge().getContextualEgoNetwork().getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().toString();
 	}
 	
@@ -88,5 +90,14 @@ public class GNNMiner extends SocialGraphMiner {
 		for(Node u : derivatives.keySet()) 
 			u.getOrCreateInstance(GNNNodeData.class).updateEmbedding(derivatives.get(u), learningRate);
 		return loss;
+	}
+
+	@Override
+	public double predictNewInteraction(Context context, Node destinationNode) {
+		if(destinationNode==null)
+			Utils.error(new IllegalArgumentException());
+		Tensor egoEmbedding = destinationNode.getContextualEgoNetwork().getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding();
+		Tensor destinationEmbedding = destinationNode.getOrCreateInstance(GNNNodeData.class).getEmbedding();
+		return Loss.sigmoid(egoEmbedding.dot(destinationEmbedding));
 	}
 }
