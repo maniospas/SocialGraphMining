@@ -6,7 +6,7 @@ In particular, each user (or, more precisely, their HELIOS device) carries a dif
 and needs to account for its capabilities to facilitate recommendation tasks. 
 
 ## Dependencies
-This module depends on eu.h2020.helios_social.core.contextualegonetwork 
+This module depends on eu.h2020.helios_social.core.contextualegonetwork but has no dependencies on external libraries.
 
 ## API Usage
 Here we provide example usage of how this module's Graph Neural Network (GNN) miner can be
@@ -63,8 +63,9 @@ public class Device {
 	}
 }
 ```
-An example simulation that demonstrates the capabilities of the mining module in more details
-has been setup in the file *eu.h2020.helios_social.module.socialgraphmining.examples.java*.
+An example simulation that demonstrates the capabilities of the mining module in more detail
+has been setup in the file *eu.h2020.helios_social.module.socialgraphmining.examples.java*
+(datasets for running this simulation can be provided upon request).
 
 ## Project Structure
 This project contains the following components:
