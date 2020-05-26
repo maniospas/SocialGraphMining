@@ -191,7 +191,7 @@ public class Tensor {
 	}
 	/**
 	 * @return A copy of the tensor on which L2 normalization has been performed
-	 * @see #setNormalize()
+	 * @see #setToNormalized()
 	 */
 	public Tensor normalized() {
 		double norm = norm();

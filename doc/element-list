@@ -1,2 +1,6 @@
 eu.h2020.helios_social.module.socialgraphmining
+eu.h2020.helios_social.module.socialgraphmining.examples
 eu.h2020.helios_social.module.socialgraphmining.GNN
+eu.h2020.helios_social.module.socialgraphmining.GNN.operations
+eu.h2020.helios_social.module.socialgraphmining.heuristics
+eu.h2020.helios_social.module.socialgraphmining.measures

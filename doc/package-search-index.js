@@ -1,1 +1,1 @@
-packageSearchIndex = [{"l":"eu.h2020.helios_social.module.socialgraphmining"},{"l":"eu.h2020.helios_social.module.socialgraphmining.GNN"}]
+packageSearchIndex = [{"l":"eu.h2020.helios_social.module.socialgraphmining"},{"l":"eu.h2020.helios_social.module.socialgraphmining.examples"},{"l":"eu.h2020.helios_social.module.socialgraphmining.GNN"},{"l":"eu.h2020.helios_social.module.socialgraphmining.GNN.operations"},{"l":"eu.h2020.helios_social.module.socialgraphmining.heuristics"},{"l":"eu.h2020.helios_social.module.socialgraphmining.measures"}]

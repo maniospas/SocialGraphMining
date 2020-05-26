@@ -33,7 +33,7 @@ public class HitRate implements Measure {
 
 	/**
 	 * Constructor that creates for calculating HitRate@k when there are at least 2k or more recommendations.
-	 * @param k The number of top recommendations in which to check that occuring interactions reside
+	 * @param k The number of top recommendations in which to check that occurring interactions reside.
 	 * @see #HitRate(int, int)
 	 */
 	public HitRate(int k) {
@@ -41,7 +41,9 @@ public class HitRate implements Measure {
 	}
 	
 	/**
-	 * Constructor that creates a HitRate@k evaluation .
+	 * Constructor that creates a HitRate@k evaluation.
+	 * @param k The number of top recommendations in which to check that occurring interactions reside.
+	 * @param requiredCandidates The number of recommendations that need be available for the evaluation to be valid.
 	 */
 	public HitRate(int k, int requiredCandidates) {
 		this.k = k;
