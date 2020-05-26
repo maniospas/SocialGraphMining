@@ -35,7 +35,7 @@ public class Device {
 	public void send(Device other) {
 		other.receive(this, miner.getModelParameters(null));
 	}
-	public void receive(Device other, String parameters) {
+	protected void receive(Device other, String parameters) {
 		Interaction interaction = contextualEgoNetwork
 				.getCurrentContext()
 				.getOrAddEdge(contextualEgoNetwork.getOrCreateNode(other.getName(), null), contextualEgoNetwork.getEgo())
@@ -43,7 +43,7 @@ public class Device {
 		miner.newInteraction(interaction, parameters, InteractionType.RECEIVE);
 		other.receiveAck(this, miner.getModelParameters(interaction));
 	}
-	public void receiveAck(Device other, String parameters) {
+	protected void receiveAck(Device other, String parameters) {
 		Interaction interaction = contextualEgoNetwork
 				.getCurrentContext()
 				.getOrAddEdge(contextualEgoNetwork.getEgo(), contextualEgoNetwork.getOrCreateNode(other.getName(), null))
@@ -63,7 +63,8 @@ public class Device {
 	}
 }
 ```
-
+An example simulation that demonstrates the capabilities of the mining module in more details
+has been setup in the file *eu.h2020.helios_social.module.socialgraphmining.examples.java*.
 
 ## Project Structure
 This project contains the following components:

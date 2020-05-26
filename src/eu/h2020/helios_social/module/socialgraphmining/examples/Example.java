@@ -32,7 +32,7 @@ public class Example {
 		public void send(Device other) {
 			other.receive(this, miner.getModelParameters(null));
 		}
-		public void receive(Device other, String parameters) {
+		protected void receive(Device other, String parameters) {
 			Interaction interaction = contextualEgoNetwork
 					.getCurrentContext()
 					.getOrAddEdge(contextualEgoNetwork.getOrCreateNode(other.getName(), null), contextualEgoNetwork.getEgo())
@@ -40,7 +40,7 @@ public class Example {
 			miner.newInteraction(interaction, parameters, InteractionType.RECEIVE);
 			other.receiveAck(this, miner.getModelParameters(interaction));
 		}
-		public void receiveAck(Device other, String parameters) {
+		protected void receiveAck(Device other, String parameters) {
 			Interaction interaction = contextualEgoNetwork
 					.getCurrentContext()
 					.getOrAddEdge(contextualEgoNetwork.getEgo(), contextualEgoNetwork.getOrCreateNode(other.getName(), null))
