@@ -17,18 +17,21 @@ public class GNNNodeData {
 	
 	private Tensor embedding = null;
 	private Tensor regularization = null;
+	private Tensor neighborAggregation = null;
+	
 	public GNNNodeData() {}
 	protected void initializeIfNeeded() {
 		if(embedding==null) {
 			embedding = new Tensor(embeddingSize);
 			regularization = new Tensor(embeddingSize);
+			neighborAggregation = new Tensor(embeddingSize);
 			embedding.setToRandom();
 		}
 	}
 	
 	/**
-	 * 
-	 * @return The embedding representation of the node.
+	 * Retrieves the embedding of the node.
+	 * @return A Tensor holding the embedding representation.
 	 */
 	public synchronized Tensor getEmbedding() {
 		initializeIfNeeded();
@@ -36,11 +39,31 @@ public class GNNNodeData {
 	}
 	
 	/**
+	 * Sets a neighbor aggregation that can be retrieved with {@link #getNeighborAggregation()}. This
+	 * aggregation is computed by other devices and this function is called when receiving it as part
+	 * of the shared parameters. These operations are automatically performed by
+	 * {@link GNNMiner#newInteraction(Interaction, String, InteractionType)}
+	 * @param neighborAggregation The received Tensor of neighbor aggregation
+	 */
+	public synchronized void setNeighborAggregation(Tensor neighborAggregation) {
+		this.neighborAggregation = neighborAggregation;
+	}
+	
+	/**
+	 * An aggregation of the node's neighborhood embeddings in the social graph.
+	 * @return A tensor holding the aggregated neighborhood embeddings
+	 * @see #setNeighborAggregation(Tensor)
+	 */
+	public synchronized Tensor getNeighborAggregation() {
+		return neighborAggregation;
+	}
+	
+	/**
 	 * Sets the regularization (default is a zero vector) of the {@link #updateEmbedding(Tensor, double)} operation.
-	 * Setting this to a value other than zero helps influence the trained embedding to a similar latent space than the 
-	 * one of that value. Hence, this can be used to influence the embeddings of nodes in the contextual ego network
+	 * Setting this to a value other than a zero tensor helps influence the trained embedding to a latent space arround
+	 * the given value. Hence, this can be used to influence the embeddings of nodes in the contextual ego network
 	 * given their embeddings in other devices.
-	 * @param regularization
+	 * @param regularization The given regularization tensor.
 	 */
 	public synchronized void setRegularization(Tensor regularization) {
 		this.regularization = regularization;

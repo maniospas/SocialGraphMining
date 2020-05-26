@@ -10,21 +10,21 @@ import eu.h2020.helios_social.module.socialgraphmining.SocialGraphMiner;
 
 /**
  * This class provides a {@link SocialGraphMiner} that re-recommends previous interactions 
- * with alters based on their chronological order.
+ * with alters based on the order of received messages.
  * 
  * @author Emmanouil Krasanakis
  */
-public class RepeatMiner extends SocialGraphMiner {
+public class ReplyMiner extends SocialGraphMiner {
 	/**
 	 * This class is used to hold information about the order alters have been interacted with.
 	 * It is tied to the edge of each interaction.
 	 * 
 	 * @author Emmanouil Krasanakis
 	 */
-	public static class SendOrderTimestamp {
+	public static class ReceiveOrderTimestamp {
 		private static long maxValue = 0;
 		private long value = 0;
-		public SendOrderTimestamp() {}
+		public ReceiveOrderTimestamp() {}
 		public void updateValue() {
 			maxValue += 1;
 			value = maxValue;
@@ -36,14 +36,14 @@ public class RepeatMiner extends SocialGraphMiner {
 		}
 	}
 	
-	public RepeatMiner(ContextualEgoNetwork contextualEgoNetwork) {
+	public ReplyMiner(ContextualEgoNetwork contextualEgoNetwork) {
 		super(contextualEgoNetwork);
 	}
 
 	@Override
 	public void newInteraction(Interaction interaction, String neighborModelParameters, InteractionType interactionType) {
-		if(interactionType==InteractionType.RECEIVE_REPLY) 
-			interaction.getEdge().getOrCreateInstance(SendOrderTimestamp.class).updateValue();
+		if(interactionType==InteractionType.RECEIVE) 
+			interaction.getEdge().getOrCreateInstance(ReceiveOrderTimestamp.class).updateValue();
 	}
 
 	@Override
@@ -55,7 +55,7 @@ public class RepeatMiner extends SocialGraphMiner {
 	public double predictNewInteraction(Context context, Node destinationNode) {
 		for(Edge edge : context.getEdges())
 			if(edge.getAlter()==destinationNode)
-				return edge.getOrCreateInstance(SendOrderTimestamp.class).getValue();
+				return edge.getOrCreateInstance(ReceiveOrderTimestamp.class).getValue();
 		return 0;
 	}
 

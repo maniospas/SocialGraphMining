@@ -12,9 +12,11 @@ import java.util.ArrayList;
  * @author Emmanouil Krasanakis
  */
 public class ContextTrainingExampleData {
-	private static double removalThreshold = 0.01;
+	private static double removalThreshold = 0.1;
 	private ArrayList<TrainingExample> trainingExamples = null;
+	
 	public ContextTrainingExampleData() {}
+	
 	/**
 	 * Grants direct access to a list of training examples to traverse of edit.
 	 * @return An array list of training examples.
@@ -24,6 +26,7 @@ public class ContextTrainingExampleData {
 			trainingExamples = new ArrayList<TrainingExample>();
 		return trainingExamples;
 	}
+	
 	/**
 	 * Calls the {@link TrainingExample#degrade(double)} operation for each {@link TrainingExample} in the
 	 * data (e.g. to reduce all weights) and removes those that end up on a very small weight.
