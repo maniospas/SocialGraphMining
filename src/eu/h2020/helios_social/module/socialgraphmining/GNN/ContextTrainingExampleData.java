@@ -2,6 +2,8 @@ package eu.h2020.helios_social.module.socialgraphmining.GNN;
 
 import java.util.ArrayList;
 
+import eu.h2020.helios_social.module.socialgraphmining.GNN.operations.Tensor;
+
 /**
  * This class provides a storage structure that organizes a list of {@link TrainingExample} data to be stored in the 
  * contextual ego network's contexts.
@@ -12,8 +14,9 @@ import java.util.ArrayList;
  * @author Emmanouil Krasanakis
  */
 public class ContextTrainingExampleData {
-	private static double removalThreshold = 0.1;
 	private ArrayList<TrainingExample> trainingExamples = null;
+	public Tensor transformToSrcEmbedding = null;
+	public Tensor transformToDstEmbedding = null;
 	
 	public ContextTrainingExampleData() {}
 	
@@ -28,11 +31,13 @@ public class ContextTrainingExampleData {
 	}
 	
 	/**
-	 * Calls the {@link TrainingExample#degrade(double)} operation for each {@link TrainingExample} in the
+	 * Calls the {@link TrainingExample#degrade} operation for each {@link TrainingExample} in the
 	 * data (e.g. to reduce all weights) and removes those that end up on a very small weight.
-	 * @param factor The degrading factor.
+	 * @param factor The degrading factor passed on to the degrade operation.
+	 * @param removalThreshold The threshold weight under which training examples are removed.
+	 * @see TrainingExample#getWeight()
 	 */
-	public synchronized void degrade(double factor) {
+	public synchronized void degrade(double factor, double removalThreshold) {
 		for(TrainingExample trainingExample : new ArrayList<TrainingExample>(getTrainingExampleList())) {
 			trainingExample.degrade(factor);
 			if(trainingExample.getWeight() < removalThreshold)

@@ -33,9 +33,11 @@ public class TrainingExample {
 	/**
 	 * Multiplies the weight of the training example with a given factor.
 	 * @param factor A degrading factor of training example weight.
+	 * @return <code>this</code> TrainingExample instance.
 	 */
-	public void degrade(double factor) {
+	public TrainingExample degrade(double factor) {
 		weight *= factor;
+		return this;
 	}
 	
 	/**

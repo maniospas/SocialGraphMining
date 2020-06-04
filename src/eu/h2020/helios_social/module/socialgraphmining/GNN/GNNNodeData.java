@@ -13,7 +13,8 @@ import eu.h2020.helios_social.module.socialgraphmining.GNN.operations.Tensor;
  */
 public class GNNNodeData {
 	private static int embeddingSize = 10;
-	private static double regularizationWeight = 0.1;
+	private double learningRate = 1;
+	private double regularizationWeight = 0.1;
 	
 	private Tensor embedding = null;
 	private Tensor regularization = null;
@@ -60,13 +61,36 @@ public class GNNNodeData {
 	
 	/**
 	 * Sets the regularization (default is a zero vector) of the {@link #updateEmbedding(Tensor, double)} operation.
-	 * Setting this to a value other than a zero tensor helps influence the trained embedding to a latent space arround
+	 * Setting this to a value other than a zero tensor helps influence the trained embedding to a latent space around
 	 * the given value. Hence, this can be used to influence the embeddings of nodes in the contextual ego network
 	 * given their embeddings in other devices.
 	 * @param regularization The given regularization tensor.
+	 * @see #setRegularizationWeight(double)
 	 */
 	public synchronized void setRegularization(Tensor regularization) {
 		this.regularization = regularization;
+	}
+	
+	/**
+	 * Sets the learning rate (default is 1) of the {@link #updateEmbedding(Tensor, double)} operation.
+	 * @param learningRate The given regularization weight.
+	 * @return <code>this</code> GNNNodeData instance.
+	 */
+	public GNNNodeData setLearningRate(double learningRate) {
+		this.learningRate = learningRate;
+		return this;
+	}
+
+	/**
+	 * Sets the regularization weight (default is 0.1) of the {@link #updateEmbedding(Tensor, double)} operation.
+	 * This helps influence the trained embedding to a latent space around the given value
+	 * @param regularizationWeight The given regularization weight.
+	 * @return <code>this</code> GNNNodeData instance.
+	 * @see #setRegularization(Tensor)
+	 */
+	public synchronized GNNNodeData setRegularizationWeight(double regularizationWeight) {
+		this.regularizationWeight = regularizationWeight;
+		return this;
 	}
 	
 	/**
@@ -74,12 +98,14 @@ public class GNNNodeData {
 	 * that is a regularized gradient descent over a computed derivative, where the area of regularization is constrained towards the point
 	 * set by {@link #setRegularization(Tensor)}.
 	 * @param derivative The derivative of the embedding.
-	 * @param learningRate The learning rate.
 	 * @see #getEmbedding()
+	 * @see #setLearningRate(double)
+	 * @see #setRegularizationWeight(double)
+	 * @see #setRegularization(Tensor)
 	 */
-	public synchronized void updateEmbedding(Tensor derivative, double learningRate) {
+	public synchronized void updateEmbedding(Tensor derivative) {
 		embedding = embedding
-						.add(regularization.subtract(embedding).multiply(regularizationWeight*learningRate))
-						.add(derivative.multiply(-learningRate));
+						.add(regularization.subtract(embedding).selfMultiply(regularizationWeight*learningRate))
+						.selfAdd(derivative.multiply(-learningRate));
 	}
 };

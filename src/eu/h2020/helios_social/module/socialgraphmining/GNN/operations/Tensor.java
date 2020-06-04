@@ -35,10 +35,12 @@ public class Tensor {
 	protected Tensor() {}
 	/**
 	 * Set tensor elements to random values in the range [0,1]
+	 * @return <code>this</code> Tensor instance.
 	 */
-	public void setToRandom() {
+	public Tensor setToRandom() {
 		for(int i=0;i<size();i++)
 			put(i, Math.random());
+		return this;
 	}
 	
 	/**
@@ -110,6 +112,18 @@ public class Tensor {
 		return res;
 	}
 	/**
+	 * Performs in-memory addition to the Tensor, storing the result in itself.
+	 * @param tensor The tensor to add (it's not affected).
+	 * @return <code>this</code> Tensor instance.
+	 */
+	public Tensor selfAdd(Tensor tensor) {
+		assertSize(tensor.size());
+		Tensor res = this;
+		for(int i=0;i<values.length;i++)
+			res.put(i, get(i)+tensor.get(i));
+		return res;
+	}
+	/**
 	 * @param tensor The tensor to subtract
 	 * @return a new Tensor that stores the outcome of subtraction
 	 */
@@ -121,8 +135,20 @@ public class Tensor {
 		return res;
 	}
 	/**
-	 * @param tensor The tensor to perform element-wise multiplication with
-	 * @return a new Tensor that stores the outcome of the multiplication
+	 * Performs in-memory subtraction from the Tensor, storing the result in itself.
+	 * @param tensor The tensor to subtract (it's not affected).
+	 * @return <code>this</code> Tensor instance.
+	 */
+	public Tensor selfSubtract(Tensor tensor) {
+		assertSize(tensor.size());
+		Tensor res = this;
+		for(int i=0;i<values.length;i++)
+			res.put(i, get(i)-tensor.get(i));
+		return res;
+	}
+	/**
+	 * @param tensor The tensor to perform element-wise multiplication with.
+	 * @return A new Tensor that stores the outcome of the multiplication.
 	 */
 	public Tensor multiply(Tensor tensor) {
 		assertSize(tensor.size());
@@ -132,8 +158,20 @@ public class Tensor {
 		return res;
 	}
 	/**
-	 * @param value A number to multiply all tensor elements with
-	 * @return a new Tensor that stores the outcome of the multiplication
+	 * Performs in-memory multiplication on the Tensor, storing the result in itself .
+	 * @param tensor The tensor to perform element-wise multiplication with  (it's not affected).
+	 * @return <code>this</code> Tensor instance.
+	 */
+	public Tensor selfMultiply(Tensor tensor) {
+		assertSize(tensor.size());
+		Tensor res = this;
+		for(int i=0;i<values.length;i++)
+			res.put(i, get(i)*tensor.get(i));
+		return res;
+	}
+	/**
+	 * @param value A number to multiply all tensor elements with.
+	 * @return A new Tensor that stores the outcome of the multiplication.
 	 */
 	public Tensor multiply(double value) {
 		Tensor res = zeroCopy();
@@ -142,8 +180,19 @@ public class Tensor {
 		return res;
 	}
 	/**
-	 * Performs the dot product between this and another tensor
-	 * @param tensor The tensor with which to find the product
+	 * Performs in-memory multiplication on the Tensor, storing the result to itself.
+	 * @param value A number to multiply all tensor elements with.
+	 * @return <code>this</code> Tensor instance.
+	 */
+	public Tensor selfMultiply(double value) {
+		Tensor res = this;
+		for(int i=0;i<values.length;i++)
+			res.put(i, get(i)*value);
+		return res;
+	}
+	/**
+	 * Performs the dot product between this and another tensor.
+	 * @param tensor The tensor with which to find the product.
 	 * @return The dot product between the tensors.
 	 */
 	public double dot(Tensor tensor) {
@@ -154,9 +203,9 @@ public class Tensor {
 		return res;
 	}
 	/**
-	 * Performs the triple dot product between this and two other tensors
-	 * @param tensor1 The firth other tensor with which to find the product
-	 * @param tensor2 The second other tensor with which to find the product
+	 * Performs the triple dot product between this and two other tensors.
+	 * @param tensor1 The firth other tensor with which to find the product.
+	 * @param tensor2 The second other tensor with which to find the product.
 	 * @return The triple dot product between the tensors.
 	 */
 	public double dot(Tensor tensor1, Tensor tensor2) {
@@ -190,7 +239,7 @@ public class Tensor {
 		return res.toString();
 	}
 	/**
-	 * @return A copy of the tensor on which L2 normalization has been performed
+	 * @return A copy of the tensor on which L2 normalization has been performed.
 	 * @see #setToNormalized()
 	 */
 	public Tensor normalized() {
@@ -202,35 +251,43 @@ public class Tensor {
 		return res;
 	}
 	/**
-	 * L2-normalizes the tensor elements
+	 * L2-normalizes the tensor elements.
+	 * @return <code>this</code> Tensor instance.
 	 * @see #normalized()
 	 */
-	public void setToNormalized() {
+	public Tensor setToNormalized() {
 		double norm = norm();
 		if(norm!=0)
 			for(int i=0;i<values.length;i++)
 				put(i, get(i)/norm);
+		return this;
 	}
 	/**
 	 * Set all tensor element values to 1/{@link #size()}
+	 * @return <code>this</code> Tensor instance.
 	 */
-	public void setToUniform() {
+	public Tensor setToUniform() {
 		for(int i=0;i<values.length;i++)
 			put(i, 1./values.length);
+		return this;
 	}
 	/**
-	 * Set all tensor element values to 1
+	 * Set all tensor element values to 1.
+	 * @return <code>this</code> Tensor instance.
 	 */
-	public void setToOnes() {
+	public Tensor setToOnes() {
 		for(int i=0;i<values.length;i++)
 			put(i, 1.);
+		return this;
 	}
 	/**
-	 * Set all tensor element values to 0
+	 * Set all tensor element values to 0.
+	 * @return <code>this</code> Tensor instance.
 	 */
-	public void setToZero() {
+	public Tensor setToZero() {
 		for(int i=0;i<values.length;i++)
 			put(i, 0.);
+		return this;
 	}
 
 

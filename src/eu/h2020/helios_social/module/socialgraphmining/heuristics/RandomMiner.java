@@ -14,7 +14,7 @@ import eu.h2020.helios_social.module.socialgraphmining.SocialGraphMiner;
  */
 public class RandomMiner extends SocialGraphMiner {
 
-	protected RandomMiner(ContextualEgoNetwork contextualEgoNetwork) {
+	public RandomMiner(ContextualEgoNetwork contextualEgoNetwork) {
 		super(contextualEgoNetwork);
 	}
 

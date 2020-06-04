@@ -53,9 +53,11 @@ public class HitRate implements Measure {
 	@Override
 	public double evaluateSend(SocialGraphMiner socialGraphMiner, Context context, Node dst) {
 		HashMap<Node, Double> maps = socialGraphMiner.recommendInteractions(context);
-		if(!maps.containsKey(dst) || maps.size()<requiredCandidates)
+		if(!maps.containsKey(dst) || maps.size() < requiredCandidates)
 			return Double.NaN;
 		double dstValue = maps.get(dst);
+		if(dstValue==0)
+			return Double.NaN;
 		int countLargerValues = 0;
 		for(double value : maps.values())
 			if(value >= dstValue)
