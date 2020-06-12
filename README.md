@@ -16,9 +16,9 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
-import eu.h2020.helios_social.module.socialgraphmining.SocialGraphMiner;
-import eu.h2020.helios_social.module.socialgraphmining.SocialGraphMiner.InteractionType;
-import eu.h2020.helios_social.module.socialgraphmining.GNN.GNNMiner;
+import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
+import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.InteractionType;
+import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNMiner;
 
 
 public class Device {
