@@ -5,7 +5,7 @@ import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 
 /**
  * A class models a training example used in GNN architectures that can be written
- * a tuplet (src, dst, weight, label). The source and destination node pairs
+ * a tuple (src, dst, weight, label). The source and destination node pairs
  * cannot be modeled through an Interaction of the contextual ego network module,
  * because they also include potentially negative examples.
  * 
@@ -41,28 +41,32 @@ public class TrainingExample {
 	}
 	
 	/**
-	 * @return The source node of the interaction.
+	 * Retrieves the destination node of the training example interaction.
+	 * @return The source node.
 	 */
 	public Node getSrc() {
 		return src;
 	}
 
 	/**
-	 * @return The destination node of the interaction.
+	 * Retrieves the destination node of the training example interaction.
+	 * @return The destination node.
 	 */
 	public Node getDst() {
 		return dst;
 	}
 	
 	/**
-	 * @return A binary label of whether the training example is of an existing (1) or non-existing (0) interaction.
+	 * Retrieves the binary label the training example interaction that indicates whether whether the training example is of an existing (1) or non-existing (0) interaction.
+	 * @return The binary label of the example.
 	 */
 	public int getLabel() {
 		return label;
 	}
 	
 	/**
-	 * @return The weight of the interaction.
+	 * Retrieves the weight of the training example.
+	 * @return The weight of the example.
 	 * @see #degrade(double)
 	 */
 	public double getWeight() {

@@ -60,7 +60,7 @@ public class GNNNodeData {
 	}
 	
 	/**
-	 * Sets the regularization (default is a zero vector) of the {@link #updateEmbedding(Tensor, double)} operation.
+	 * Sets the regularization (default is a zero vector) of the {@link #updateEmbedding(Tensor)} operation.
 	 * Setting this to a value other than a zero tensor helps influence the trained embedding to a latent space around
 	 * the given value. Hence, this can be used to influence the embeddings of nodes in the contextual ego network
 	 * given their embeddings in other devices.
@@ -72,7 +72,7 @@ public class GNNNodeData {
 	}
 	
 	/**
-	 * Sets the learning rate (default is 1) of the {@link #updateEmbedding(Tensor, double)} operation.
+	 * Sets the learning rate (default is 1) of the {@link #updateEmbedding(Tensor)} operation.
 	 * @param learningRate The given regularization weight.
 	 * @return <code>this</code> GNNNodeData instance.
 	 */
@@ -82,7 +82,7 @@ public class GNNNodeData {
 	}
 
 	/**
-	 * Sets the regularization weight (default is 0.1) of the {@link #updateEmbedding(Tensor, double)} operation.
+	 * Sets the regularization weight (default is 0.1) of the {@link #updateEmbedding(Tensor)} operation.
 	 * This helps influence the trained embedding to a latent space around the given value
 	 * @param regularizationWeight The given regularization weight.
 	 * @return <code>this</code> GNNNodeData instance.
@@ -104,7 +104,7 @@ public class GNNNodeData {
 	 * @see #setRegularization(Tensor)
 	 */
 	public synchronized void updateEmbedding(Tensor derivative) {
-		embedding = embedding
+		embedding = getEmbedding()
 						.add(regularization.subtract(embedding).selfMultiply(regularizationWeight*learningRate))
 						.selfAdd(derivative.multiply(-learningRate));
 	}

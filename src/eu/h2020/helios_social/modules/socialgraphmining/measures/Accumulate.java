@@ -8,7 +8,7 @@ import eu.h2020.helios_social.modules.socialgraphmining.Measure;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 
 /**
- * This measure is used to average the outcome of a base measure over given frames of time.
+ * This {@link Measure} is used to average the outcome of a base measure over given frames of time.
  * 
  * @author Emmanouil Krasanakis
  */

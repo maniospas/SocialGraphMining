@@ -16,9 +16,8 @@ import eu.h2020.helios_social.modules.socialgraphmining.Measure;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.InteractionType;
-import eu.h2020.helios_social.modules.socialgraphmining.heuristics.AdditionalDiscoveryMiner;
-import eu.h2020.helios_social.modules.socialgraphmining.heuristics.MemoryMiner;
-import eu.h2020.helios_social.modules.socialgraphmining.heuristics.RandomMiner;
+import eu.h2020.helios_social.modules.socialgraphmining.SwitchableMiner;
+import eu.h2020.helios_social.modules.socialgraphmining.heuristics.DifferenceMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.RepeatAndReplyMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.Accumulate;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.HitRate;
@@ -27,23 +26,27 @@ public class Example {
 	public static class Device {
 		private ContextualEgoNetwork contextualEgoNetwork;
 		private HashSet<Device> neighbors = new HashSet<Device>();
-		private static SocialGraphMiner miner;
-		private SocialGraphMiner gnnMiner;
+		private SocialGraphMiner miner;
+		
+		private static SocialGraphMiner staticGNN = new GNNMiner(ContextualEgoNetwork.createOrLoad("experiment_data\\", "all", null))
+				.setTrainingExampleDegradation(1)
+				.setDeniability(0, 0)
+				.setRegularizationAbsorbsion(0)
+				.setRegularizationWeight(0.1);
+		
 		public Device(String name) {
 			contextualEgoNetwork = ContextualEgoNetwork.createOrLoad("experiment_data\\", name, null);
-			if(gnnMiner==null)
-				gnnMiner = (new GNNMiner(contextualEgoNetwork))
-					.setTrainingExampleDegradation(1)
-					.setDeniability(0, 0)
-					.setRegularizationAbsorbsion(0)
-					.setRegularizationWeight(0.1);
-			int old = 3;
-			//miner = new PPRMiner(contextualEgoNetwork);
 			
-			miner = new AdditionalDiscoveryMiner(gnnMiner, new RepeatAndReplyMiner(contextualEgoNetwork), old);
-			//miner = new AdditionalDiscoveryMiner(new RepeatAndReplyMiner(contextualEgoNetwork), new RepeatAndReplyMiner(contextualEgoNetwork), old);
-			//miner = new AdditionalDiscoveryMiner(new RandomMiner(contextualEgoNetwork), new RepeatAndReplyMiner(contextualEgoNetwork), old);
-			//miner = gnnMiner;
+			
+			SwitchableMiner miner = new SwitchableMiner(contextualEgoNetwork);
+			miner.createMiner("repeat", RepeatAndReplyMiner.class);
+			miner.createMiner("gnn", GNNMiner.class).setDeniability(0.1, 0.1);
+			
+			
+			this.miner = miner;
+			//this.miner = new AdditionalDiscoveryMiner(miner, miner.getMiner("repeat"), 3);
+			
+			miner.setActiveMiner("gnn");
 			contextualEgoNetwork.setCurrent(contextualEgoNetwork.getOrCreateContext("default"));
 		}
 		public String getName() {

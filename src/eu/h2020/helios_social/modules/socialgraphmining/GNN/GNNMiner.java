@@ -171,7 +171,7 @@ public class GNNMiner extends SocialGraphMiner {
 	}
 
 	@Override
-	public void newInteraction(Interaction interaction, String neighborModelParameters, InteractionType interactionType) {
+	public synchronized void newInteraction(Interaction interaction, String neighborModelParameters, InteractionType interactionType) {
 		if(neighborModelParameters==null || interaction.getEdge().getEgo()==null)
 			return;
 		String[] receivedTensors = neighborModelParameters.split("\\;");

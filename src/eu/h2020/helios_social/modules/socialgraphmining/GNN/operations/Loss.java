@@ -2,6 +2,11 @@ package eu.h2020.helios_social.modules.socialgraphmining.GNN.operations;
 
 import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 
+/**
+ * Provides computation and (partial) derivation of activation and cross-entropy loss functions.
+ * 
+ * @author Emmanouil Krasanakis
+ */
 public class Loss {
 	/**
 	 * The sigmoid function 1/(1+exp(-x)).

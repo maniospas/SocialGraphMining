@@ -21,7 +21,7 @@ public class ContextTrainingExampleData {
 	public ContextTrainingExampleData() {}
 	
 	/**
-	 * Grants direct access to a list of training examples to traverse of edit.
+	 * Grants direct access to a list of training examples to traverse or edit.
 	 * @return An array list of training examples.
 	 */
 	public synchronized ArrayList<TrainingExample> getTrainingExampleList() {

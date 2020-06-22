@@ -10,7 +10,7 @@ import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 
 /**
  * This class provides a {@link SocialGraphMiner} that re-recommends previous interactions 
- * with alters based on the chronological order. It differs from {@link RepeatMiner} that it 
+ * with alters based on their chronological order. It differs from {@link RepeatMiner} that it 
  * also recommends previously received interactions.
  * 
  * @author Emmanouil Krasanakis

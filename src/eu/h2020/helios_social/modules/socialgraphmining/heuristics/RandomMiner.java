@@ -8,7 +8,7 @@ import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 
 /**
  * This class provides a {@link SocialGraphMiner} that recommends random interactions among
- * previous ones. It has not predictive accuracy and should only be used as a baseline.
+ * previous ones. It has no predictive accuracy and can at best be used as a baseline.
  * 
  * @author Emmanouil Krasanakis
  */

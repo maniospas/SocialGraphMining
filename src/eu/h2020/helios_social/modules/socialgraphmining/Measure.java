@@ -10,7 +10,7 @@ import eu.h2020.helios_social.core.contextualegonetwork.Node;
  */
 public interface Measure {
 	/**
-	 * Supervised evaluation of interactions send by each node.
+	 * Supervised evaluation of interactions sent by each node.
 	 * @param socialGraphMiner The social graph miner used to perform the prediction.
 	 * @param context The context in which new interactions are predicted.
 	 * @param dst The destination node.

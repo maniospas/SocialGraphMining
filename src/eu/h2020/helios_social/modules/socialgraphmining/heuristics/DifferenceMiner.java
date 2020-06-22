@@ -4,19 +4,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import eu.h2020.helios_social.core.contextualegonetwork.Context;
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 import eu.h2020.helios_social.core.contextualegonetwork.Node;
+import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 
-public class AdditionalDiscoveryMiner extends SocialGraphMiner {
+/**
+ * This class provides a {@link SocialGraphMiner} that wraps a miner predictions so as not to predict the top of a base miner's predictions
+ * (e.g. DHR@k,withhold of a miner is obtained if HitRate@k is calculated over the outcome of <code>
+ * new AdditionalDiscoveryMiner(miner, new RepeatAndReplyMiner(cen), withhold)</code>.
+ * @author Emmanouil Krasanakis
+ */
+public class DifferenceMiner extends SocialGraphMiner {
+	private static String parameterSplit = "@@@";
 	private SocialGraphMiner discoveryMiner, baseMiner;
 	private int withholdTopOfBaseMiner;
 
-	public AdditionalDiscoveryMiner(SocialGraphMiner discoveryMiner, SocialGraphMiner baseMiner, int withholdTopOfBaseMiner) {
+	public DifferenceMiner(SocialGraphMiner discoveryMiner, SocialGraphMiner baseMiner, int withholdTopOfBaseMiner) {
 		super(discoveryMiner.getContextualEgoNetwork());
 		this.discoveryMiner = discoveryMiner;
 		this.baseMiner = baseMiner;
@@ -25,19 +32,19 @@ public class AdditionalDiscoveryMiner extends SocialGraphMiner {
 
 	@Override
 	public void newInteraction(Interaction interaction, String neighborModelParameters, InteractionType interactionType) {
-		String[] params = neighborModelParameters.split("@@");
+		String[] params = neighborModelParameters.split(parameterSplit);
 		discoveryMiner.newInteraction(interaction, params[0], interactionType);
 		baseMiner.newInteraction(interaction, params[1], interactionType);
 	}
 
 	@Override
 	public String getModelParameters(Interaction interaction) {
-		return discoveryMiner.getModelParameters(interaction)+"@@"+baseMiner.getModelParameters(interaction);
+		return discoveryMiner.getModelParameters(interaction)+parameterSplit+baseMiner.getModelParameters(interaction);
 	}
 
 	@Override
 	public double predictNewInteraction(Context context, Node destinationNode) {
-		throw new RuntimeException("This method should not be called for this miner");
+		return Utils.error("This method should not be called for differences", 0);
 		//return discoveryMiner.predictNewInteraction(context, destinationNode) / (0.1+baseMiner.predictNewInteraction(context, destinationNode));
 	}
 	

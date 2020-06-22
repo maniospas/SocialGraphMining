@@ -8,7 +8,7 @@ import eu.h2020.helios_social.modules.socialgraphmining.Measure;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 
 /**
- * Provides a HitRate@k evaluation, which ensures that one of the occurred interaction lies among the top k recommendations
+ * This {@link Measure} provides a HitRate@k evaluation, which measures whether the occurred interactions lie among the top k recommendations
  * provided by {@link SocialGraphMiner#recommendInteractions(Context)}. Ties are resolved towards not favoring the
  * recommendation, so that for example all-zero recommendations are evaluated as failed ones. Since this {@link Measure}
  * is used to assess only one prediction instance at a time, its assessment is either 0 or 1 and needs be aggregated
