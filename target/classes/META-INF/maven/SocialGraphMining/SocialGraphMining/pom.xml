@@ -2,24 +2,19 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>SocialGraphMining</groupId>
   <artifactId>SocialGraphMining</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.${BUILD_NUMBER}</version>
   <repositories>
   <repository>
-    <id>jitpack.io</id>
-    <url>https://jitpack.io</url>
+    <id>helios-repository</id>
+    <url>http://builder.helios-social.eu:8081/repository/helios-repository</url>
   </repository>
   </repositories>
   <dependencies>
   <dependency>
-    <groupId>com.github.DistributedSystemsSocialNetworkAnalysis</groupId>
-    <artifactId>Contextual-Ego-Network</artifactId>
-    <version>0.11-SNAPSHOT</version>
-  </dependency>
-  <dependency>
-  	<groupId>jfree</groupId>
-  	<artifactId>jfreechart</artifactId>
-  	<version>1.0.13</version>
-  </dependency>
+    <groupId>eu.h2020.helios_social.core.contextualegonetwork</groupId>
+    <artifactId>contextualegonetwork</artifactId>
+    <version>1.0.15</version>
+   </dependency>
   </dependencies>
   <build>
     <sourceDirectory>src</sourceDirectory>
