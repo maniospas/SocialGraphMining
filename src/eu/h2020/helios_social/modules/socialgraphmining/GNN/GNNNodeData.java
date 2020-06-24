@@ -104,7 +104,7 @@ public class GNNNodeData {
 	 * @see #setRegularization(Tensor)
 	 */
 	public synchronized void updateEmbedding(Tensor derivative) {
-		embedding = getEmbedding()
+		embedding = embedding
 						.add(regularization.subtract(embedding).selfMultiply(regularizationWeight*learningRate))
 						.selfAdd(derivative.multiply(-learningRate));
 	}

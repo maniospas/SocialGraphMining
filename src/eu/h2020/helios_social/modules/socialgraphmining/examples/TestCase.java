@@ -22,48 +22,64 @@ import eu.h2020.helios_social.modules.socialgraphmining.heuristics.RepeatAndRepl
 import eu.h2020.helios_social.modules.socialgraphmining.measures.Accumulate;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.HitRate;
 
-public class Example {
+public class TestCase {
 	public static class Device {
+		private ContextualEgoNetwork contextualEgoNetwork;
+		private HashSet<Device> neighbors = new HashSet<Device>();
 		private SocialGraphMiner miner;
 		
 		public Device(String name) {
-			ContextualEgoNetwork contextualEgoNetwork = ContextualEgoNetwork.createOrLoad("experiment_data\\", name, null);
+			contextualEgoNetwork = ContextualEgoNetwork.createOrLoad("experiment_data\\", name, null);
+			
 			
 			SwitchableMiner miner = new SwitchableMiner(contextualEgoNetwork);
 			miner.createMiner("repeat", RepeatAndReplyMiner.class);
 			miner.createMiner("gnn", GNNMiner.class).setDeniability(0.1, 0.1);
+			
+			
 			this.miner = miner;
+			//this.miner = new AdditionalDiscoveryMiner(miner, miner.getMiner("repeat"), 3);
 			
 			miner.setActiveMiner("gnn");
 			contextualEgoNetwork.setCurrent(contextualEgoNetwork.getOrCreateContext("default"));
 		}
 		public String getName() {
-			return miner.getContextualEgoNetwork().getEgo().getId();
+			return contextualEgoNetwork.getEgo().getId();
 		}
 		public void send(Device other) {
-			Interaction interaction = miner.getContextualEgoNetwork()
+			Interaction interaction = contextualEgoNetwork
 					.getCurrentContext()
-					.getOrAddEdge(miner.getContextualEgoNetwork().getEgo(), miner.getContextualEgoNetwork().getOrCreateNode(other.getName(), null))
+					.getOrAddEdge(contextualEgoNetwork.getEgo(), contextualEgoNetwork.getOrCreateNode(other.getName(), null))
 					.addDetectedInteraction(null);
 			other.receive(this, miner.getModelParameters(interaction));
+			/*neighbors.add(other);
+			for(Device neighbor : neighbors)
+			if(neighbor!=other){
+				Interaction interaction = neighbor.contextualEgoNetwork
+						.getCurrentContext()
+						.getOrAddEdge(neighbor.contextualEgoNetwork.getOrCreateNode(other.getName(), null), 
+								neighbor.contextualEgoNetwork.getOrCreateNode(getName(), null))
+						.addDetectedInteraction(null);
+				neighbor.miner.newInteraction(interaction, miner.getModelParameters(null), InteractionType.RECEIVE);
+			}*/
 		}
 		protected void receive(Device other, String parameters) {
-			Interaction interaction = miner.getContextualEgoNetwork()
+			Interaction interaction = contextualEgoNetwork
 					.getCurrentContext()
-					.getOrAddEdge(miner.getContextualEgoNetwork().getOrCreateNode(other.getName(), null), miner.getContextualEgoNetwork().getEgo())
+					.getOrAddEdge(contextualEgoNetwork.getOrCreateNode(other.getName(), null), contextualEgoNetwork.getEgo())
 					.addDetectedInteraction(null);
 			miner.newInteraction(interaction, parameters, InteractionType.RECEIVE);
 			other.receiveAck(this, miner.getModelParameters(interaction));
 		}
 		protected void receiveAck(Device other, String parameters) {
-			ArrayList<Interaction> interactions = miner.getContextualEgoNetwork()
+			ArrayList<Interaction> interactions = contextualEgoNetwork
 					.getCurrentContext()
-					.getOrAddEdge(miner.getContextualEgoNetwork().getEgo(), miner.getContextualEgoNetwork().getOrCreateNode(other.getName(), null))
+					.getOrAddEdge(contextualEgoNetwork.getEgo(), contextualEgoNetwork.getOrCreateNode(other.getName(), null))
 					.getInteractions();
 			miner.newInteraction(interactions.get(interactions.size()-1), parameters, InteractionType.RECEIVE_REPLY);
 		}
 		public Node recommendNextInteraction() {
-			HashMap<Node, Double> interactionScores = miner.recommendInteractions(miner.getContextualEgoNetwork().getCurrentContext());
+			HashMap<Node, Double> interactionScores = miner.recommendInteractions(contextualEgoNetwork.getCurrentContext());
 			double bestScore = 0;
 			Node bestNode = null;
 			for(Entry<Node, Double> interactionScore : interactionScores.entrySet()) 
@@ -77,38 +93,8 @@ public class Example {
 	
 	
 	public static void main(String[] args) throws Exception {
-		HashMap<String, Device> devices = new HashMap<String, Device>();
-		BufferedReader edgeReader = new BufferedReader(new FileReader(new File("datasets/ia-enron-email-dynamic.edges")));
-		String line = null;
-		Measure measure = new Accumulate(new HitRate(3, 9));
-		String result = "";
-		int currentInteraction = 0;
-		while((line=edgeReader.readLine())!=null) {
-			if(line.startsWith("%") || line.startsWith("#") || line.isEmpty())
-				continue;
-			String[] splt = line.split(" ");
-			if(splt.length<3)
-				continue;
-			String u = splt[0];
-			String v = splt[1];
-			if(u.equals(v))
-				continue;
-			if(!devices.containsKey(u))
-				devices.put(u, new Device(u));
-			if(!devices.containsKey(v))
-				devices.put(v, new Device(v));
-			double evaluation = measure.evaluateSend(devices.get(u).miner,
-					devices.get(u).miner.getContextualEgoNetwork().getCurrentContext(),
-					devices.get(u).miner.getContextualEgoNetwork().getOrCreateNode(v, null));
-			if(currentInteraction%1000==0)
-				System.out.println("#"+currentInteraction+": "+evaluation);
-			if(currentInteraction%100==0)
-				result += ","+evaluation;
-			devices.get(u).send(devices.get(v));
-			currentInteraction++;
-		}
-		edgeReader.close();
-		result = "["+result.substring(1)+"];\n";
-		System.out.print(result);
+		Device A = new Device("A");
+		Device B = new Device("B");
+		A.send(B);
 	}
 }

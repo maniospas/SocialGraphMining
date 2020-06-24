@@ -172,7 +172,7 @@ public class GNNMiner extends SocialGraphMiner {
 
 	@Override
 	public synchronized void newInteraction(Interaction interaction, String neighborModelParameters, InteractionType interactionType) {
-		if(neighborModelParameters==null || interaction.getEdge().getEgo()==null)
+		if(neighborModelParameters==null || interaction.getEdge().getEgo()==null || interactionType==InteractionType.SEND)
 			return;
 		String[] receivedTensors = neighborModelParameters.split("\\;");
 		Edge edge = interaction.getEdge();
@@ -334,6 +334,7 @@ public class GNNMiner extends SocialGraphMiner {
 				.setRegularizationWeight(regularizationWeight)
 				.updateEmbedding(derivatives.get(u).multiply(1./totalWeights.get(u)));
 		}
+		System.exit(1);
 		
 		if(outgoingEdgeLearningRateMultiplier!=0)
 			trainingExampleData.transformToSrcEmbedding = transformToSrcEmbeddingDerivative
