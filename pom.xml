@@ -13,7 +13,7 @@
   <dependency>
     <groupId>eu.h2020.helios_social.core.contextualegonetwork</groupId>
     <artifactId>contextualegonetwork</artifactId>
-    <version>1.0.15</version>
+    <version>1.0.0</version>
    </dependency>
   </dependencies>
   <build>
