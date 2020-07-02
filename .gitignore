@@ -6,6 +6,8 @@ experiment_data/
 .metadata
 bin/
 tmp/
+target/
+targets/
 *.tmp
 *.bak
 *.swp
