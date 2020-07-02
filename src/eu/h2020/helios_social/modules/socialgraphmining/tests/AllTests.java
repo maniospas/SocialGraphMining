@@ -7,7 +7,8 @@ import org.junit.runners.Suite.SuiteClasses;
 @RunWith(Suite.class)
 @SuiteClasses({
         GNNMinerTest.class,
-        GNNOperationsTest.class})
+        GNNOperationsTest.class,
+        HeuristicMinersTest.class})
 
 public class AllTests {
 }

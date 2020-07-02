@@ -11,12 +11,10 @@ import java.util.Map.Entry;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 import eu.h2020.helios_social.core.contextualegonetwork.Node;
-import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 import eu.h2020.helios_social.modules.socialgraphmining.Measure;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.InteractionType;
-import eu.h2020.helios_social.modules.socialgraphmining.SwitchableMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.DifferenceMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.RepeatAndReplyMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.Accumulate;
@@ -24,18 +22,10 @@ import eu.h2020.helios_social.modules.socialgraphmining.measures.HitRate;
 
 public class Example {
 	public static class Device {
-		private ContextualEgoNetwork contextualEgoNetwork;
-		private HashSet<Device> neighbors = new HashSet<Device>();
 		private SocialGraphMiner miner;
 		
-		private static SocialGraphMiner staticGNN = new GNNMiner(ContextualEgoNetwork.createOrLoad("experiment_data\\", "all", null))
-				.setTrainingExampleDegradation(1)
-				.setDeniability(0, 0)
-				.setRegularizationAbsorbsion(0)
-				.setRegularizationWeight(0.1);
-		
 		public Device(String name) {
-			contextualEgoNetwork = ContextualEgoNetwork.createOrLoad("experiment_data\\", name, null);
+			ContextualEgoNetwork contextualEgoNetwork = ContextualEgoNetwork.createOrLoad("experiment_data\\", name, null);
 			
 			/*SwitchableMiner miner = new SwitchableMiner(contextualEgoNetwork);
 			miner.createMiner("repeat", RepeatAndReplyMiner.class);
@@ -44,48 +34,38 @@ public class Example {
 			miner.setActiveMiner("gnn");*/
 			
 			this.miner = new DifferenceMiner(
-						(new GNNMiner(contextualEgoNetwork)).setRegularizationAbsorbsion(0),
+						(new GNNMiner(contextualEgoNetwork)),
 						new RepeatAndReplyMiner(contextualEgoNetwork), 3);
 			
 			contextualEgoNetwork.setCurrent(contextualEgoNetwork.getOrCreateContext("default"));
 		}
 		public String getName() {
-			return contextualEgoNetwork.getEgo().getId();
+			return miner.getContextualEgoNetwork().getEgo().getId();
 		}
 		public void send(Device other) {
-			Interaction interaction = contextualEgoNetwork
+			Interaction interaction = miner.getContextualEgoNetwork()
 					.getCurrentContext()
-					.getOrAddEdge(contextualEgoNetwork.getEgo(), contextualEgoNetwork.getOrCreateNode(other.getName(), null))
+					.getOrAddEdge(miner.getContextualEgoNetwork().getEgo(), miner.getContextualEgoNetwork().getOrCreateNode(other.getName(), null))
 					.addDetectedInteraction(null);
 			other.receive(this, miner.getModelParameters(interaction));
-			/*neighbors.add(other);
-			for(Device neighbor : neighbors)
-			if(neighbor!=other){
-				Interaction interaction = neighbor.contextualEgoNetwork
-						.getCurrentContext()
-						.getOrAddEdge(neighbor.contextualEgoNetwork.getOrCreateNode(other.getName(), null), 
-								neighbor.contextualEgoNetwork.getOrCreateNode(getName(), null))
-						.addDetectedInteraction(null);
-				neighbor.miner.newInteraction(interaction, miner.getModelParameters(null), InteractionType.RECEIVE);
-			}*/
 		}
 		protected void receive(Device other, String parameters) {
-			Interaction interaction = contextualEgoNetwork
+			Interaction interaction = miner.getContextualEgoNetwork()
 					.getCurrentContext()
-					.getOrAddEdge(contextualEgoNetwork.getOrCreateNode(other.getName(), null), contextualEgoNetwork.getEgo())
+					.getOrAddEdge(miner.getContextualEgoNetwork().getOrCreateNode(other.getName(), null), miner.getContextualEgoNetwork().getEgo())
 					.addDetectedInteraction(null);
 			miner.newInteraction(interaction, parameters, InteractionType.RECEIVE);
 			other.receiveAck(this, miner.getModelParameters(interaction));
 		}
 		protected void receiveAck(Device other, String parameters) {
-			ArrayList<Interaction> interactions = contextualEgoNetwork
+			ArrayList<Interaction> interactions = miner.getContextualEgoNetwork()
 					.getCurrentContext()
-					.getOrAddEdge(contextualEgoNetwork.getEgo(), contextualEgoNetwork.getOrCreateNode(other.getName(), null))
+					.getOrAddEdge(miner.getContextualEgoNetwork().getEgo(), miner.getContextualEgoNetwork().getOrCreateNode(other.getName(), null))
 					.getInteractions();
 			miner.newInteraction(interactions.get(interactions.size()-1), parameters, InteractionType.RECEIVE_REPLY);
 		}
 		public Node recommendNextInteraction() {
-			HashMap<Node, Double> interactionScores = miner.recommendInteractions(contextualEgoNetwork.getCurrentContext());
+			HashMap<Node, Double> interactionScores = miner.recommendInteractions(miner.getContextualEgoNetwork().getCurrentContext());
 			double bestScore = 0;
 			Node bestNode = null;
 			for(Entry<Node, Double> interactionScore : interactionScores.entrySet()) 
@@ -120,8 +100,8 @@ public class Example {
 			if(!devices.containsKey(v))
 				devices.put(v, new Device(v));
 			double evaluation = measure.evaluateSend(devices.get(u).miner,
-					devices.get(u).contextualEgoNetwork.getCurrentContext(),
-					devices.get(u).contextualEgoNetwork.getOrCreateNode(v, null));
+					devices.get(u).miner.getContextualEgoNetwork().getCurrentContext(),
+					devices.get(u).miner.getContextualEgoNetwork().getOrCreateNode(v, null));
 			if(currentInteraction%1000==0)
 				System.out.println("#"+currentInteraction+": "+evaluation);
 			if(currentInteraction%100==0)
