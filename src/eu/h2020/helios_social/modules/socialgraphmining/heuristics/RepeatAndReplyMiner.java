@@ -1,5 +1,6 @@
 package eu.h2020.helios_social.modules.socialgraphmining.heuristics;
 
+
 import eu.h2020.helios_social.core.contextualegonetwork.Context;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
 import eu.h2020.helios_social.core.contextualegonetwork.Edge;
@@ -55,10 +56,14 @@ public class RepeatAndReplyMiner extends SocialGraphMiner {
 
 	@Override
 	public double predictNewInteraction(Context context, Node destinationNode) {
+		double maxVal = 0;
 		for(Edge edge : context.getEdges())
-			if(edge.getEgo()!=null && edge.getAlter()==destinationNode)
-				return edge.getOrCreateInstance(OrderTimestamp.class).getValue();
-		return 0;
+			if(edge.getEgo()!=null && edge.getAlter()==destinationNode) {
+				double val = edge.getOrCreateInstance(OrderTimestamp.class).getValue();
+				if(val>maxVal)
+					maxVal = val;
+			}
+		return maxVal;
 	}
 
 }

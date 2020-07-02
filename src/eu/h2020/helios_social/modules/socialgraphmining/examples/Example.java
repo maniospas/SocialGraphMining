@@ -37,16 +37,16 @@ public class Example {
 		public Device(String name) {
 			contextualEgoNetwork = ContextualEgoNetwork.createOrLoad("experiment_data\\", name, null);
 			
-			
-			SwitchableMiner miner = new SwitchableMiner(contextualEgoNetwork);
+			/*SwitchableMiner miner = new SwitchableMiner(contextualEgoNetwork);
 			miner.createMiner("repeat", RepeatAndReplyMiner.class);
 			miner.createMiner("gnn", GNNMiner.class).setDeniability(0.1, 0.1);
-			
-			
 			this.miner = miner;
-			//this.miner = new AdditionalDiscoveryMiner(miner, miner.getMiner("repeat"), 3);
+			miner.setActiveMiner("gnn");*/
 			
-			miner.setActiveMiner("gnn");
+			this.miner = new DifferenceMiner(
+						(new GNNMiner(contextualEgoNetwork)).setRegularizationAbsorbsion(0),
+						new RepeatAndReplyMiner(contextualEgoNetwork), 3);
+			
 			contextualEgoNetwork.setCurrent(contextualEgoNetwork.getOrCreateContext("default"));
 		}
 		public String getName() {
