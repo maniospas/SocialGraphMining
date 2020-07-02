@@ -11,12 +11,10 @@ import java.util.Map.Entry;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 import eu.h2020.helios_social.core.contextualegonetwork.Node;
-import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 import eu.h2020.helios_social.modules.socialgraphmining.Measure;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.InteractionType;
-import eu.h2020.helios_social.modules.socialgraphmining.SwitchableMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.DifferenceMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.RepeatAndReplyMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.Accumulate;
@@ -29,12 +27,16 @@ public class Example {
 		public Device(String name) {
 			ContextualEgoNetwork contextualEgoNetwork = ContextualEgoNetwork.createOrLoad("experiment_data\\", name, null);
 			
-			SwitchableMiner miner = new SwitchableMiner(contextualEgoNetwork);
+			/*SwitchableMiner miner = new SwitchableMiner(contextualEgoNetwork);
 			miner.createMiner("repeat", RepeatAndReplyMiner.class);
 			miner.createMiner("gnn", GNNMiner.class).setDeniability(0.1, 0.1).setRegularizationAbsorbsion(0);
 			this.miner = miner;
+			miner.setActiveMiner("gnn");*/
 			
-			miner.setActiveMiner("gnn");
+			this.miner = new DifferenceMiner(
+						(new GNNMiner(contextualEgoNetwork)),
+						new RepeatAndReplyMiner(contextualEgoNetwork), 3);
+			
 			contextualEgoNetwork.setCurrent(contextualEgoNetwork.getOrCreateContext("default"));
 		}
 		public String getName() {

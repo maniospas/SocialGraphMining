@@ -334,7 +334,6 @@ public class GNNMiner extends SocialGraphMiner {
 				.setRegularizationWeight(regularizationWeight)
 				.updateEmbedding(derivatives.get(u).multiply(1./totalWeights.get(u)));
 		}
-		System.exit(1);
 		
 		if(outgoingEdgeLearningRateMultiplier!=0)
 			trainingExampleData.transformToSrcEmbedding = transformToSrcEmbeddingDerivative

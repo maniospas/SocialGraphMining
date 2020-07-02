@@ -1,8 +1,5 @@
 package eu.h2020.helios_social.modules.socialgraphmining.examples;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,16 +8,11 @@ import java.util.Map.Entry;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 import eu.h2020.helios_social.core.contextualegonetwork.Node;
-import eu.h2020.helios_social.core.contextualegonetwork.Utils;
-import eu.h2020.helios_social.modules.socialgraphmining.Measure;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.InteractionType;
 import eu.h2020.helios_social.modules.socialgraphmining.SwitchableMiner;
-import eu.h2020.helios_social.modules.socialgraphmining.heuristics.DifferenceMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.RepeatAndReplyMiner;
-import eu.h2020.helios_social.modules.socialgraphmining.measures.Accumulate;
-import eu.h2020.helios_social.modules.socialgraphmining.measures.HitRate;
 
 public class TestCase {
 	public static class Device {

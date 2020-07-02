@@ -6,6 +6,8 @@ experiment_data/
 .metadata
 bin/
 tmp/
+target/
+targets/
 *.tmp
 *.bak
 *.swp
@@ -59,3 +61,4 @@ local.properties
 .cache-main
 .scala_dependencies
 .worksheet
+/target/

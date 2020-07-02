@@ -17,6 +17,8 @@ public abstract class SocialGraphMiner {
 	
 	private ContextualEgoNetwork contextualEgoNetwork;
 	protected SocialGraphMiner(ContextualEgoNetwork contextualEgoNetwork) {
+		if(contextualEgoNetwork==null)
+			throw new IllegalArgumentException();
 		this.contextualEgoNetwork = contextualEgoNetwork;
 	}
 	public ContextualEgoNetwork getContextualEgoNetwork() {
