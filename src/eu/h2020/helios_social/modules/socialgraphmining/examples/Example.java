@@ -31,7 +31,7 @@ public class Example {
 			
 			SwitchableMiner miner = new SwitchableMiner(contextualEgoNetwork);
 			miner.createMiner("repeat", RepeatAndReplyMiner.class);
-			miner.createMiner("gnn", GNNMiner.class).setDeniability(0.1, 0.1);
+			miner.createMiner("gnn", GNNMiner.class).setDeniability(0.1, 0.1).setRegularizationAbsorbsion(0);
 			this.miner = miner;
 			
 			miner.setActiveMiner("gnn");
