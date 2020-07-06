@@ -7,15 +7,15 @@ and needs to account for its capabilities to facilitate recommendation tasks. Re
 basis and can facilitate various objectives.
 
 ## Installation
-This module depends on `eu.h2020.helios_social.core.contextualegonetwork`.
+This module depends on [eu.h2020.helios_social.core.contextualegonetwork](https://github.com/helios-h2020/h.core-SocialEgoNetwork).
 
 ### Jar File installation
-This project can be downloaded as a [jar file](../jar/h.extension-SocialGraphMining 1.0.0.jar), which can be added on a
-Java project's dependencies. This requires also downloading the respective [ContextualEgoNetwork JAR]().
+This project can be downloaded as a [jar file](https://github.com/helios-h2020/h.extension-SocialGraphMining/blob/master/jar/h.extension-SocialGraphMining%201.0.0.jar), which can be added on a
+Java project's dependencies. This requires also adding the Jar of the ContextualEgoNetwork library.
 
 ### Gradle Installation
-##### First step
-Add the JitPack repository to your build file. In particular, add it in your root build.gradle at the end of repositories:
+First, add the JitPack repository to your build file. In particular, add it in your root build.gradle at the end of repositories:
+
 ```
 allprojects {
 	repositories {
@@ -24,17 +24,17 @@ allprojects {
 	}
 }
 ```
-##### Second step
-Add the dependency:
+
+Then add the dependency:
+
 ```
 dependencies {
-	implementation 'com.github.User:Repo:Tag'
+        implementation 'com.github.helios-h2020:h.extension-SocialGraphMining:1.0.0'
 }
 ```
 
 ### Maven Installation
-##### First step
-Add the JitPack repository to your build pom file:
+First add the JitPack repository to your build pom file:
 
 ```xml
 <repositories>
@@ -45,14 +45,13 @@ Add the JitPack repository to your build pom file:
 </repositories>
 ```
 
-##### Second step
-Add the dependency:
+Then add the dependency:
 
 ```xml
 <dependency>
-    <groupId>com.github.DistributedSystemsSocialNetworkAnalysis</groupId>
-    <artifactId>Contextual-Ego-Network</artifactId>
-    <version>Tag</version>
+    <groupId>com.github.helios-h2020</groupId>
+    <artifactId>h.extension-SocialGraphMining</artifactId>
+    <version>1.0.0</version>
 </dependency>
 ```
 
