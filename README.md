@@ -7,6 +7,7 @@ and needs to account for its capabilities to facilitate recommendation tasks. Re
 basis and can facilitate various objectives.
 
 ## Installation
+[![](https://jitpack.io/v/helios-h2020/h.extension-SocialGraphMining.svg)](https://jitpack.io/#helios-h2020/h.extension-SocialGraphMining)
 This module depends on [eu.h2020.helios_social.core.contextualegonetwork](https://github.com/helios-h2020/h.core-SocialEgoNetwork).
 
 ### Jar File installation
@@ -172,3 +173,5 @@ This project contains the following components:
 src - The source code files.
 
 doc - Additional documentation files.
+
+jar - Jar file installation.
