@@ -1,6 +1,7 @@
 # Example data
 datasets/
 experiment_data/
+.gradle/
 
 # Eclpse data
 .metadata

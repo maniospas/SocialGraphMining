@@ -6,8 +6,55 @@ In particular, each user (or, more precisely, their HELIOS device) carries a dif
 and needs to account for its capabilities to facilitate recommendation tasks. Recommendations are performed on a per-context
 basis and can facilitate various objectives.
 
-## Dependencies
-This module depends only on `eu.h2020.helios_social.core.contextualegonetwork`.
+## Installation
+This module depends on `eu.h2020.helios_social.core.contextualegonetwork`.
+
+### Jar File installation
+This project can be downloaded as a [jar file](../jar/h.extension-SocialGraphMining 1.0.0.jar), which can be added on a
+Java project's dependencies. This requires also downloading the respective [ContextualEgoNetwork JAR]().
+
+### Gradle Installation
+##### First step
+Add the JitPack repository to your build file. In particular, add it in your root build.gradle at the end of repositories:
+```
+allprojects {
+	repositories {
+		...
+		maven { url 'https://jitpack.io' }
+	}
+}
+```
+##### Second step
+Add the dependency:
+```
+dependencies {
+	implementation 'com.github.User:Repo:Tag'
+}
+```
+
+### Maven Installation
+##### First step
+Add the JitPack repository to your build pom file:
+
+```xml
+<repositories>
+	<repository>
+	    <id>jitpack.io</id>
+	    <url>https://jitpack.io</url>
+	</repository>
+</repositories>
+```
+
+##### Second step
+Add the dependency:
+
+```xml
+<dependency>
+    <groupId>com.github.DistributedSystemsSocialNetworkAnalysis</groupId>
+    <artifactId>Contextual-Ego-Network</artifactId>
+    <version>Tag</version>
+</dependency>
+```
 
 ## API Usage
 Here we detail how to develop applications using this module's graph API to provide social graph recommendation capabilities.
@@ -105,7 +152,7 @@ String parametersOfB = miner.getModelParameters(interaction);
 ```
 Then *B* sends back to *A* its parameters (e.g. by attaching to a receive acknowledgement message).
 
-##### Second step (RECEIVE_ACK)
+##### Third step (RECEIVE_ACK)
 *A* receives the parameters of *B* (parametersOfB), retrieves the interaction these refer to and notifies its miner about the update:
 
 ```java
