@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map.Entry;
 
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
