@@ -289,6 +289,16 @@ public class Tensor {
 			put(i, 0.);
 		return this;
 	}
-
+	
+	/**
+	 * Retrieves a representation of the Tensor as an array of doubles.
+	 * @return An array of doubles
+	 */
+	public double[] toArray() {
+		double[] values = new double[this.values.length];
+		for(int i=0;i<this.values.length;i++)
+			values[i] = this.values[i];
+		return values;
+	}
 
 }

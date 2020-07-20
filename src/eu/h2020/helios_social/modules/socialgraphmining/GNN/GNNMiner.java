@@ -1,7 +1,8 @@
 package eu.h2020.helios_social.modules.socialgraphmining.GNN;
 
-
 import java.util.HashMap;
+
+import org.junit.runner.manipulation.Sortable;
 
 import eu.h2020.helios_social.core.contextualegonetwork.Context;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
@@ -11,6 +12,7 @@ import eu.h2020.helios_social.core.contextualegonetwork.Node;
 import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Loss;
+import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Sort;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Tensor;
 
 /**
@@ -169,7 +171,17 @@ public class GNNMiner extends SocialGraphMiner {
 		this.neighborDeniability = differentialPrivacy;
 		return this;
 	}
-
+	
+	protected static Tensor transformLike(Tensor source, Tensor exampleSource, Tensor exampleTarget) {
+		/*int[] sourceIndex = Sort.sortedIndexes(exampleSource.toArray());
+		int[] targetIndex = Sort.sortedIndexes(exampleSource.toArray());
+		Tensor target = source.zeroCopy();
+		for(int i=0;i<sourceIndex.length;i++)
+			target.put(targetIndex[i], source.get(sourceIndex[i]));
+		return target;//TODO: parameterize what is returned as either source or target*/
+		return source;
+	}
+	
 	@Override
 	public synchronized void newInteraction(Interaction interaction, String neighborModelParameters, InteractionType interactionType) {
 		if(neighborModelParameters==null || interaction.getEdge().getEgo()==null || interactionType==InteractionType.SEND)
@@ -178,7 +190,15 @@ public class GNNMiner extends SocialGraphMiner {
 		Edge edge = interaction.getEdge();
 		if(updateEgoEmbeddingsFromNeighbors!=0)
 			edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().selfMultiply(1-updateEgoEmbeddingsFromNeighbors).selfAdd(new Tensor(receivedTensors[2]).selfMultiply(updateEgoEmbeddingsFromNeighbors));
-		edge.getAlter().getOrCreateInstance(GNNNodeData.class).setRegularization((new Tensor(receivedTensors[0])).selfMultiply(regularizationAbsorbsion));
+		
+		Tensor alterTensor = transformLike(new Tensor(receivedTensors[0]),
+				    (new Tensor(receivedTensors[2])).selfAdd(new Tensor(receivedTensors[0])), 
+					edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding()
+								.add(edge.getAlter().getOrCreateInstance(GNNNodeData.class).getEmbedding()));
+		double receivedConfidence = Double.parseDouble(receivedTensors[3]);
+		unpackExamples(receivedTensors[4], edge.getContext());
+		
+		edge.getAlter().getOrCreateInstance(GNNNodeData.class).setRegularization(alterTensor.selfMultiply(regularizationAbsorbsion));
 		edge.getAlter().getOrCreateInstance(GNNNodeData.class).setNeighborAggregation(new Tensor(receivedTensors[1]));
 		if(interactionType==InteractionType.RECEIVE_REPLY || interactionType==InteractionType.RECEIVE) {
 			ContextTrainingExampleData trainingExampleData = edge.getContext().getOrCreateInstance(ContextTrainingExampleData.class);
@@ -189,7 +209,7 @@ public class GNNMiner extends SocialGraphMiner {
 				trainingExampleData.transformToSrcEmbedding = edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().zeroCopy().setToOnes();
 			
 			if(trainingExampleDegradation!=1)
-				trainingExampleData.degrade(trainingExampleDegradation, trainingExampleRemovalThreshold);
+				trainingExampleData.degrade(trainingExampleDegradation*receivedConfidence+(1-receivedConfidence), trainingExampleRemovalThreshold);
 			//create the positive training example
 			trainingExampleData.getTrainingExampleList().add(new TrainingExample(edge.getSrc(), edge.getDst(), 1));
 			//create two negative training examples
@@ -239,12 +259,35 @@ public class GNNMiner extends SocialGraphMiner {
 		return ret;
 	}
 	
+	public double getConfidence(Context context) {
+		/*ContextTrainingExampleData trainingExampleData = context.getOrCreateInstance(ContextTrainingExampleData.class);
+		double sumWeights = 0;
+		for(TrainingExample trainingExample : trainingExampleData.getTrainingExampleList())
+			sumWeights += trainingExample.getWeight();*/
+		return 1;//-0.1*Math.exp(-sumWeights);
+	}
+	
 	protected Tensor permute(Tensor tensor, double permutation) {
 		if(permutation==0)
 			return tensor;
 		return tensor
 				.multiply(1-permutation)
 				.selfAdd(tensor.zeroCopy().setToRandom().multiply(tensor.norm()*permutation));
+	}
+	
+	private void unpackExamples(String packedExamples, Context context) {
+		ContextTrainingExampleData trainingExampleData = context.getOrCreateInstance(ContextTrainingExampleData.class);
+		for(String unpacked : packedExamples.split("\\]"))
+			if(unpacked.length()>1)
+				trainingExampleData.getTrainingExampleList().add(new TrainingExample(context.getContextualEgoNetwork(), unpacked.substring(1)));
+	}
+	
+	private String packExamples(Context context) {
+		ContextTrainingExampleData trainingExampleData = context.getOrCreateInstance(ContextTrainingExampleData.class);
+		String ret = "[]";
+		for(TrainingExample example : trainingExampleData.getTrainingExampleList())
+			ret += "["+example.toString()+"]";
+		return ret;
 	}
 	
 	@Override
@@ -254,7 +297,9 @@ public class GNNMiner extends SocialGraphMiner {
 		Context context = interaction.getEdge().getContext();
 		return permute(interaction.getEdge().getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding(), egoDeniability).toString()+";"
 			 + permute(aggregateNeighborEmbeddings(context), neighborDeniability).toString()+";"
-			 + permute(interaction.getEdge().getAlter().getOrCreateInstance(GNNNodeData.class).getEmbedding(), neighborDeniability).toString()+";";
+			 + permute(interaction.getEdge().getAlter().getOrCreateInstance(GNNNodeData.class).getEmbedding(), egoDeniability).toString()+";"
+			 + getConfidence(context)+";"
+			 + packExamples(context)+";";
 	}
 	
 	protected void train(ContextTrainingExampleData trainingExampleData) {
