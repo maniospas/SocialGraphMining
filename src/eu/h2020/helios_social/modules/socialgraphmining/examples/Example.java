@@ -17,26 +17,29 @@ import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.Interac
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.DifferenceMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.RepeatAndReplyMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.Accumulate;
+import eu.h2020.helios_social.modules.socialgraphmining.measures.DiscoveryRank;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.HitRate;
 
 public class Example {
 	public static class Device {
 		private SocialGraphMiner miner;
+		private ContextualEgoNetwork contextualEgoNetwork;
 		
 		public Device(String name) {
-			ContextualEgoNetwork contextualEgoNetwork = ContextualEgoNetwork.createOrLoad("experiment_data\\", name, null);
-			
+			if(contextualEgoNetwork==null) {
+				contextualEgoNetwork = ContextualEgoNetwork.createOrLoad("experiment_data\\", name, null);
+				contextualEgoNetwork.setCurrent(contextualEgoNetwork.getOrCreateContext("default"));
+			}
 			/*SwitchableMiner miner = new SwitchableMiner(contextualEgoNetwork);
 			miner.createMiner("repeat", RepeatAndReplyMiner.class);
 			miner.createMiner("gnn", GNNMiner.class).setDeniability(0.1, 0.1).setRegularizationAbsorbsion(0);
 			this.miner = miner;
 			miner.setActiveMiner("gnn");*/
-			
+			SocialGraphMiner repeatAndReply = new RepeatAndReplyMiner(contextualEgoNetwork);
 			this.miner = new DifferenceMiner(
-						(new GNNMiner(contextualEgoNetwork)),
-						new RepeatAndReplyMiner(contextualEgoNetwork), 3);
-			
-			contextualEgoNetwork.setCurrent(contextualEgoNetwork.getOrCreateContext("default"));
+					//repeatAndReply,
+					     (new GNNMiner(contextualEgoNetwork)).setRegularizationAbsorbsion(0),
+						 repeatAndReply, 1);
 		}
 		public String getName() {
 			return miner.getContextualEgoNetwork().getEgo().getId();
@@ -81,7 +84,8 @@ public class Example {
 		HashMap<String, Device> devices = new HashMap<String, Device>();
 		BufferedReader edgeReader = new BufferedReader(new FileReader(new File("datasets/ia-enron-email-dynamic.edges")));
 		String line = null;
-		Measure measure = new Accumulate(new HitRate(3, 9));
+		//Measure measure = new Accumulate(new HitRate(3, 6));
+		Measure measure = new Accumulate(new DiscoveryRank(3));
 		String result = "";
 		int currentInteraction = 0;
 		while((line=edgeReader.readLine())!=null) {

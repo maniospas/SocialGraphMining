@@ -1,5 +1,6 @@
 package eu.h2020.helios_social.modules.socialgraphmining.GNN;
 
+import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
 import eu.h2020.helios_social.core.contextualegonetwork.Node;
 import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 
@@ -28,6 +29,16 @@ public class TrainingExample {
 		this.dst = dst;
 		this.label = label;
 		weight = 1;
+	}
+	
+	public TrainingExample(ContextualEgoNetwork contextualEgoNetwork, String fromString) {
+		String[] splt = fromString.split(",");
+		if(splt.length<4)
+			Utils.error("Invalid training example");
+		src = contextualEgoNetwork.getOrCreateNode(splt[0], null);
+		dst = contextualEgoNetwork.getOrCreateNode(splt[1], null);
+		label = Integer.parseInt(splt[2]);
+		weight = Double.parseDouble(splt[3]);
 	}
 	
 	/**
@@ -71,5 +82,10 @@ public class TrainingExample {
 	 */
 	public double getWeight() {
 		return weight;
+	}
+	
+	@Override
+	public String toString() {
+		return src.getId()+","+dst.getId()+","+label+","+weight;
 	}
 }

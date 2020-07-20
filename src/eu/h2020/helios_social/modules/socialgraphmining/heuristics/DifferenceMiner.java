@@ -34,7 +34,8 @@ public class DifferenceMiner extends SocialGraphMiner {
 	public void newInteraction(Interaction interaction, String neighborModelParameters, InteractionType interactionType) {
 		String[] params = neighborModelParameters.split(parameterSplit);
 		discoveryMiner.newInteraction(interaction, params[0], interactionType);
-		baseMiner.newInteraction(interaction, params[1], interactionType);
+		if(baseMiner!=discoveryMiner)
+			baseMiner.newInteraction(interaction, params[1], interactionType);
 	}
 
 	@Override
