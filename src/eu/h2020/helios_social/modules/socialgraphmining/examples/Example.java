@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 import eu.h2020.helios_social.core.contextualegonetwork.Node;
+import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 import eu.h2020.helios_social.modules.socialgraphmining.Measure;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNMiner;
@@ -38,7 +39,7 @@ public class Example {
 			SocialGraphMiner repeatAndReply = new RepeatAndReplyMiner(contextualEgoNetwork);
 			this.miner = new DifferenceMiner(
 					//repeatAndReply,
-					     (new GNNMiner(contextualEgoNetwork)).setRegularizationAbsorbsion(0),
+					     (new GNNMiner(contextualEgoNetwork)).setRegularizationAbsorbsion(1),
 						 repeatAndReply, 1);
 		}
 		public String getName() {
@@ -81,11 +82,12 @@ public class Example {
 	
 	
 	public static void main(String[] args) throws Exception {
+		Utils.development = false;
 		HashMap<String, Device> devices = new HashMap<String, Device>();
 		BufferedReader edgeReader = new BufferedReader(new FileReader(new File("datasets/ia-enron-email-dynamic.edges")));
 		String line = null;
-		//Measure measure = new Accumulate(new HitRate(3, 6));
-		Measure measure = new Accumulate(new DiscoveryRank(3));
+		Measure measure = new Accumulate(new HitRate(3, 6));
+		//Measure measure = new Accumulate(new DiscoveryRank(3));
 		String result = "";
 		int currentInteraction = 0;
 		while((line=edgeReader.readLine())!=null) {
