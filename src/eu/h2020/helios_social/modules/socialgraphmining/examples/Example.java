@@ -39,7 +39,7 @@ public class Example {
 			SocialGraphMiner repeatAndReply = new RepeatAndReplyMiner(contextualEgoNetwork);
 			this.miner = new DifferenceMiner(
 					//repeatAndReply,
-					     (new GNNMiner(contextualEgoNetwork)).setRegularizationAbsorbsion(1).setRegularizationWeight(0.5),
+					     (new GNNMiner(contextualEgoNetwork)).setRegularizationAbsorbsion(0),
 						 repeatAndReply, 1);
 		}
 		public String getName() {
