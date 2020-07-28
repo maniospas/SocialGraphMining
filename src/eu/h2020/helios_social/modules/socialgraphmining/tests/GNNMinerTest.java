@@ -5,7 +5,7 @@ import org.junit.Test;
 import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNNodeData;
-import junit.framework.Assert;
+import org.junit.Assert;
 
 public class GNNMinerTest extends BaseMinerTestFunctionalities {
 	

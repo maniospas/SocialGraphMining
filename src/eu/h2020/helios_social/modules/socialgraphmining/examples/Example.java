@@ -18,7 +18,6 @@ import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.Interac
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.DifferenceMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.RepeatAndReplyMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.Accumulate;
-import eu.h2020.helios_social.modules.socialgraphmining.measures.DiscoveryRank;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.HitRate;
 
 public class Example {
@@ -39,7 +38,7 @@ public class Example {
 			SocialGraphMiner repeatAndReply = new RepeatAndReplyMiner(contextualEgoNetwork);
 			this.miner = new DifferenceMiner(
 					//repeatAndReply,
-					     (new GNNMiner(contextualEgoNetwork)).setRegularizationAbsorbsion(0),
+					     (new GNNMiner(contextualEgoNetwork)).setRegularizationAbsorbsion(1),
 						 repeatAndReply, 1);
 		}
 		public String getName() {

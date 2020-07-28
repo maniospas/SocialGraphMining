@@ -2,8 +2,6 @@ package eu.h2020.helios_social.modules.socialgraphmining.GNN;
 
 import java.util.HashMap;
 
-import org.junit.runner.manipulation.Sortable;
-
 import eu.h2020.helios_social.core.contextualegonetwork.Context;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
 import eu.h2020.helios_social.core.contextualegonetwork.Edge;
@@ -264,7 +262,7 @@ public class GNNMiner extends SocialGraphMiner {
 	protected Tensor aggregateNeighborEmbeddings(Context context) {
 		Node egoNode = context.getContextualEgoNetwork().getEgo();
 		Tensor ret = getContextualEgoNetwork().getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().zeroCopy();
-		double totalWeight = 0;
+		//double totalWeight = 0;
 		for(TrainingExample trainingExample : context.getOrCreateInstance(ContextTrainingExampleData.class).getTrainingExampleList()) {
 			if(trainingExample.getSrc()==egoNode) {
 				ret.selfAdd(trainingExample.getDst().getOrCreateInstance(GNNNodeData.class)
@@ -275,7 +273,7 @@ public class GNNMiner extends SocialGraphMiner {
 						.getNeighborAggregation()
 						.multiply(-trainingExample.getWeight()*(trainingExample.getLabel()-0.5))
 						);*/
-				totalWeight += trainingExample.getWeight();
+				//totalWeight += trainingExample.getWeight();
 			}
 			if(trainingExample.getDst()==egoNode) {
 				ret.selfAdd(trainingExample.getSrc().getOrCreateInstance(GNNNodeData.class)
@@ -288,7 +286,7 @@ public class GNNMiner extends SocialGraphMiner {
 						.multiply(trainingExample.getWeight())
 						.multiply(-trainingExample.getWeight()*(trainingExample.getLabel()-0.5))
 						);*/
-				totalWeight += trainingExample.getWeight();
+				//totalWeight += trainingExample.getWeight();
 			}
 		}
 		//if(totalWeight!=0)
@@ -372,7 +370,6 @@ public class GNNMiner extends SocialGraphMiner {
 				Tensor secondOrder_v = v.getOrCreateInstance(GNNNodeData.class).getNeighborAggregation().multiply(trainingExampleData.transformToSrcEmbedding);
 				
 				double firstOrderActivation = embedding_u.dot(embedding_v);
-				double secondOrderActivation = secondOrder_u.dot(secondOrder_v);
 				
 				totalWeights.put(u, totalWeights.getOrDefault(u, 0.)+trainingExample.getWeight());
 				totalWeights.put(v, totalWeights.getOrDefault(v, 0.)+trainingExample.getWeight());
@@ -380,18 +377,31 @@ public class GNNMiner extends SocialGraphMiner {
 				transformToSrcEmbeddingDerivativeWeight += trainingExample.getWeight();
 				transformToDstEmbeddingDerivativeWeight += trainingExample.getWeight();
 				
-				loss += trainingExample.getWeight()
-						*Loss.crossEntropy(Loss.sigmoid(firstOrderActivation)*Loss.sigmoid(secondOrderActivation), trainingExample.getLabel());
-				
 				double weight = trainingExample.getWeight();
+				double secondOrderActivation_u = embedding_u.dot(secondOrder_v);
+				double secondOrderActivation_v = secondOrder_u.dot(embedding_v);
+				derivatives.put(u, secondOrder_v
+									.multiply(trainingExampleData.transformToSrcEmbedding)
+									.selfMultiply(weight*Loss.sigmoid(secondOrderActivation_u)*Loss.crossEntropySigmoidDerivative(firstOrderActivation, trainingExample.getLabel()))
+									.selfAdd(derivatives.getOrDefault(u, zero)));
+				derivatives.put(v, secondOrder_u
+									.multiply(trainingExampleData.transformToDstEmbedding)
+									.selfMultiply(weight*Loss.sigmoid(secondOrderActivation_v)*Loss.crossEntropySigmoidDerivative(firstOrderActivation, trainingExample.getLabel()))
+									.selfAdd(derivatives.getOrDefault(v, zero)));
+				
+				weight *= Loss.sigmoid(secondOrderActivation_u)*Loss.sigmoid(secondOrderActivation_v);
+				double crossEntropyDerivative = weight*Loss.crossEntropySigmoidDerivative(embedding_u.dot(embedding_v), trainingExample.getLabel());
 				derivatives.put(u, embedding_v
 									.multiply(trainingExampleData.transformToSrcEmbedding)
-									.selfMultiply(weight*Loss.sigmoid(secondOrderActivation)*Loss.crossEntropySigmoidDerivative(firstOrderActivation, trainingExample.getLabel()))
+									.selfMultiply(weight*crossEntropyDerivative)
 									.selfAdd(derivatives.getOrDefault(u, zero)));
 				derivatives.put(v, embedding_u
 									.multiply(trainingExampleData.transformToDstEmbedding)
-									.selfMultiply(weight*Loss.sigmoid(secondOrderActivation)*Loss.crossEntropySigmoidDerivative(firstOrderActivation, trainingExample.getLabel()))
+									.selfMultiply(weight*crossEntropyDerivative)
 									.selfAdd(derivatives.getOrDefault(v, zero)));
+
+				loss += trainingExample.getWeight()
+						*Loss.crossEntropy(Loss.sigmoid(firstOrderActivation)*Loss.sigmoid(secondOrderActivation_u)*Loss.sigmoid(secondOrderActivation_v), trainingExample.getLabel());
 				
 
 				/*derivatives.put(u, secondOrder_v
@@ -457,7 +467,7 @@ public class GNNMiner extends SocialGraphMiner {
 		Tensor secondOrder_v = v.getOrCreateInstance(GNNNodeData.class).getNeighborAggregation().multiply(trainingExampleData.transformToSrcEmbedding);
 		
 		double firstOrderActivation = Loss.sigmoid(embedding_u.dot(embedding_v));
-		double secondOrderActivation = secondOrderProximity?Loss.sigmoid(secondOrder_u.dot(secondOrder_v)):1;
+		double secondOrderActivation = secondOrderProximity?Loss.sigmoid(embedding_u.dot(secondOrder_v))*Loss.sigmoid(embedding_v.dot(secondOrder_u)):1;
 		
 		return firstOrderActivation*secondOrderActivation;
 	}

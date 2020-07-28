@@ -37,7 +37,7 @@ public class Tensor {
 	 * Set tensor elements to random values in the range [0,1]
 	 * @return <code>this</code> Tensor instance.
 	 */
-	public Tensor setToRandom() {
+	public final Tensor setToRandom() {
 		for(int i=0;i<size();i++)
 			put(i, Math.random());
 		return this;
@@ -49,14 +49,16 @@ public class Tensor {
 	 * @param pos The position of the tensor element
 	 * @param value The value to assign
 	 * @throws RuntimeException If the value is NaN or the element position is less than 0 or greater than {@link #size()}-1.
+	 * @return <code>this</code> Tensor instance.
 	 */
-	public void put(int pos, double value) {
+	public final Tensor put(int pos, double value) {
 		if(Double.isNaN(value))
 			Utils.error("Cannot accept NaN tensor values");
 		else if(pos<0 || pos>=values.length)
 			Utils.error("Tensor position "+pos+" out of range [0, "+values.length+")");
 		else
 			values[pos] = value;
+		return this;
 	}
 	/**
 	 * Retrieves the value of a tensor element at a given position. All tensor operations use this function to wrap
@@ -65,7 +67,7 @@ public class Tensor {
 	 * @return The value of the tensor element
 	 * @throws RuntimeException If the element position is less than 0 or greater than {@link #size()}-1.
 	 */
-	public double get(int pos) {
+	public final double get(int pos) {
 		if(pos<0 || pos>=values.length)
 			return Utils.error("Tensor position "+pos+" out of range [0, "+values.length+")", 0);
 		return values[pos];
@@ -76,13 +78,13 @@ public class Tensor {
 	 * @param value The value to assign
 	 * @see #put(int, double)
 	 */
-	public void putAdd(int pos, double value) {
+	public final void putAdd(int pos, double value) {
 		put(pos, get(pos)+value);
 	}
 	/**
 	 * @return The number of tensor elements
 	 */
-	public int size() {
+	public final int size() {
 		return values.length;
 	}
 	/**
@@ -90,7 +92,7 @@ public class Tensor {
 	 * @param size The size the tensor should match
 	 * @throws RuntimeException if the tensor does not match the given size
 	 */
-	protected void assertSize(int size) {
+	protected final void assertSize(int size) {
 		if(size()!=size)
 			throw new RuntimeException("Different sizes: given "+size+" vs "+size());
 	}
@@ -104,7 +106,7 @@ public class Tensor {
 	 * @param tensor The tensor to add with
 	 * @return a new Tensor that stores the outcome of addition
 	 */
-	public Tensor add(Tensor tensor) {
+	public final Tensor add(Tensor tensor) {
 		assertSize(tensor.size());
 		Tensor res = zeroCopy();
 		for(int i=0;i<values.length;i++)
@@ -116,7 +118,7 @@ public class Tensor {
 	 * @param tensor The tensor to add (it's not affected).
 	 * @return <code>this</code> Tensor instance.
 	 */
-	public Tensor selfAdd(Tensor tensor) {
+	public final Tensor selfAdd(Tensor tensor) {
 		assertSize(tensor.size());
 		Tensor res = this;
 		for(int i=0;i<values.length;i++)
@@ -127,7 +129,7 @@ public class Tensor {
 	 * @param tensor The tensor to subtract
 	 * @return a new Tensor that stores the outcome of subtraction
 	 */
-	public Tensor subtract(Tensor tensor) {
+	public final Tensor subtract(Tensor tensor) {
 		assertSize(tensor.size());
 		Tensor res = zeroCopy();
 		for(int i=0;i<values.length;i++)
@@ -139,7 +141,7 @@ public class Tensor {
 	 * @param tensor The tensor to subtract (it's not affected).
 	 * @return <code>this</code> Tensor instance.
 	 */
-	public Tensor selfSubtract(Tensor tensor) {
+	public final Tensor selfSubtract(Tensor tensor) {
 		assertSize(tensor.size());
 		Tensor res = this;
 		for(int i=0;i<values.length;i++)
@@ -150,7 +152,7 @@ public class Tensor {
 	 * @param tensor The tensor to perform element-wise multiplication with.
 	 * @return A new Tensor that stores the outcome of the multiplication.
 	 */
-	public Tensor multiply(Tensor tensor) {
+	public final Tensor multiply(Tensor tensor) {
 		assertSize(tensor.size());
 		Tensor res = zeroCopy();
 		for(int i=0;i<values.length;i++)
@@ -162,7 +164,7 @@ public class Tensor {
 	 * @param tensor The tensor to perform element-wise multiplication with  (it's not affected).
 	 * @return <code>this</code> Tensor instance.
 	 */
-	public Tensor selfMultiply(Tensor tensor) {
+	public final Tensor selfMultiply(Tensor tensor) {
 		assertSize(tensor.size());
 		Tensor res = this;
 		for(int i=0;i<values.length;i++)
@@ -173,7 +175,7 @@ public class Tensor {
 	 * @param value A number to multiply all tensor elements with.
 	 * @return A new Tensor that stores the outcome of the multiplication.
 	 */
-	public Tensor multiply(double value) {
+	public final Tensor multiply(double value) {
 		Tensor res = zeroCopy();
 		for(int i=0;i<values.length;i++)
 			res.put(i, get(i)*value);
@@ -184,7 +186,7 @@ public class Tensor {
 	 * @param value A number to multiply all tensor elements with.
 	 * @return <code>this</code> Tensor instance.
 	 */
-	public Tensor selfMultiply(double value) {
+	public final Tensor selfMultiply(double value) {
 		Tensor res = this;
 		for(int i=0;i<values.length;i++)
 			res.put(i, get(i)*value);
@@ -195,7 +197,7 @@ public class Tensor {
 	 * @param tensor The tensor with which to find the product.
 	 * @return The dot product between the tensors.
 	 */
-	public double dot(Tensor tensor) {
+	public final double dot(Tensor tensor) {
 		assertSize(tensor.size());
 		double res = 0;
 		for(int i=0;i<values.length;i++)
@@ -208,7 +210,7 @@ public class Tensor {
 	 * @param tensor2 The second other tensor with which to find the product.
 	 * @return The triple dot product between the tensors.
 	 */
-	public double dot(Tensor tensor1, Tensor tensor2) {
+	public final double dot(Tensor tensor1, Tensor tensor2) {
 		assertSize(tensor1.size());
 		assertSize(tensor2.size());
 		double res = 0;
@@ -219,7 +221,7 @@ public class Tensor {
 	/**
 	 * @return The L2 norm of the tensor
 	 */
-	public double norm() {
+	public final double norm() {
 		double res = 0;
 		for(double value : values)
 			res += value*value;
@@ -242,7 +244,7 @@ public class Tensor {
 	 * @return A copy of the tensor on which L2 normalization has been performed.
 	 * @see #setToNormalized()
 	 */
-	public Tensor normalized() {
+	public final Tensor normalized() {
 		double norm = norm();
 		Tensor res = zeroCopy();
 		if(norm!=0)
@@ -255,7 +257,7 @@ public class Tensor {
 	 * @return <code>this</code> Tensor instance.
 	 * @see #normalized()
 	 */
-	public Tensor setToNormalized() {
+	public final Tensor setToNormalized() {
 		double norm = norm();
 		if(norm!=0)
 			for(int i=0;i<values.length;i++)
@@ -266,7 +268,7 @@ public class Tensor {
 	 * Set all tensor element values to 1/{@link #size()}
 	 * @return <code>this</code> Tensor instance.
 	 */
-	public Tensor setToUniform() {
+	public final Tensor setToUniform() {
 		for(int i=0;i<values.length;i++)
 			put(i, 1./values.length);
 		return this;
@@ -275,7 +277,7 @@ public class Tensor {
 	 * Set all tensor element values to 1.
 	 * @return <code>this</code> Tensor instance.
 	 */
-	public Tensor setToOnes() {
+	public final Tensor setToOnes() {
 		for(int i=0;i<values.length;i++)
 			put(i, 1.);
 		return this;
@@ -284,17 +286,16 @@ public class Tensor {
 	 * Set all tensor element values to 0.
 	 * @return <code>this</code> Tensor instance.
 	 */
-	public Tensor setToZero() {
+	public final Tensor setToZero() {
 		for(int i=0;i<values.length;i++)
 			put(i, 0.);
 		return this;
 	}
-	
 	/**
 	 * Retrieves a representation of the Tensor as an array of doubles.
 	 * @return An array of doubles
 	 */
-	public double[] toArray() {
+	public final double[] toArray() {
 		double[] values = new double[this.values.length];
 		for(int i=0;i<this.values.length;i++)
 			values[i] = this.values[i];

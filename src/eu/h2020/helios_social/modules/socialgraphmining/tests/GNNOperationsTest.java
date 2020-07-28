@@ -5,8 +5,9 @@ import org.junit.Test;
 
 import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Loss;
+import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Matrix;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Tensor;
-import junit.framework.Assert;
+import org.junit.Assert;
 
 public class GNNOperationsTest {
 	@Before
@@ -120,6 +121,20 @@ public class GNNOperationsTest {
 		Assert.assertNotSame(tensor.multiply(new Tensor(10)), tensor);
 		Assert.assertNotSame(tensor.subtract(new Tensor(10)), tensor);
 		Assert.assertNotSame(tensor.multiply(0), tensor);
+	}
+
+	@Test
+	public void matrixTransformShouldWorkCrrectly() {
+		Matrix matrix = new Matrix(3, 2)
+				.put(0, 0, 7)
+				.put(1, 1, 1)
+				.put(2, 1, 3);
+		Tensor tensor = new Tensor(2);
+		tensor.put(0, 1);
+		tensor.put(1, 2);
+		Tensor transformed = matrix.transform(tensor);
+		double[] desired = {7., 2., 6.};
+		Assert.assertArrayEquals(transformed.toArray(), desired, 0);
 	}
 	
 	@Test
