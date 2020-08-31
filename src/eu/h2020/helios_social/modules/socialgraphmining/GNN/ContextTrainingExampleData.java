@@ -2,6 +2,7 @@ package eu.h2020.helios_social.modules.socialgraphmining.GNN;
 
 import java.util.ArrayList;
 
+import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.LSTM;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Tensor;
 
 /**
@@ -17,6 +18,7 @@ public class ContextTrainingExampleData {
 	private ArrayList<TrainingExample> trainingExamples = null;
 	public Tensor transformToSrcEmbedding = null;
 	public Tensor transformToDstEmbedding = null;
+	public LSTM lstm = null;
 	
 	public ContextTrainingExampleData() {}
 	

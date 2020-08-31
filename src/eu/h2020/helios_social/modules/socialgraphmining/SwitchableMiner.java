@@ -20,7 +20,6 @@ import eu.h2020.helios_social.core.contextualegonetwork.Utils;
  * @author Emmanouil Krasanakis
  */
 public class SwitchableMiner extends SocialGraphMiner {
-	private static String parameterSplit = "@@";
 	private boolean locked = false;
 	private SocialGraphMiner activeMiner;
 	private HashMap<String, SocialGraphMiner> miners = new HashMap<String, SocialGraphMiner>();
@@ -102,25 +101,24 @@ public class SwitchableMiner extends SocialGraphMiner {
 	 * @see #createMiner(String, Class)
 	 */
 	public SocialGraphMiner setActiveMiner(String minerName) {
-		SocialGraphMiner miner = getMiner(minerName);
-		activeMiner = miners.get(minerName);
+		activeMiner = getMiner(minerName);
 		return activeMiner;
 	} 
 
 	@Override
-	public void newInteraction(Interaction interaction, String neighborModelParameters, InteractionType interactionType) {
+	public void newInteractionFromMap(Interaction interaction, SocialGraphMinerParameters neighborModelParameters, InteractionType interactionType) {
 		locked = true;
-		String[] parameters = neighborModelParameters.split(parameterSplit);
-		for(int i=0;i<parameters.length-1;i+=2) 
-			miners.get(parameters[i]).newInteraction(interaction, parameters[i+1], interactionType);
+		for(String miner : neighborModelParameters.getKeys())
+			if(miners.containsKey(miner))
+				miners.get(miner).newInteractionFromMap(interaction, neighborModelParameters.getNested(miner), interactionType);
 	}
 
 	@Override
-	public String getModelParameters(Interaction interaction) {
+	public SocialGraphMinerParameters getModelParametersAsMap(Interaction interaction) {
 		locked = true;
-		String ret = "";
+		SocialGraphMinerParameters ret = new SocialGraphMinerParameters();
 		for(Entry<String, SocialGraphMiner> minerEntry : miners.entrySet())
-			ret += minerEntry.getKey() + parameterSplit + minerEntry.getValue().getModelParameters(interaction) + parameterSplit;
+			ret.put(minerEntry.getKey(), minerEntry.getValue().getModelParametersAsMap(interaction));
 		return ret;
 	}
 

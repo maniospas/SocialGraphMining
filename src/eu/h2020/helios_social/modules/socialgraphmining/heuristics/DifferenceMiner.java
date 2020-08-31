@@ -19,7 +19,6 @@ import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
  * @author Emmanouil Krasanakis
  */
 public class DifferenceMiner extends SocialGraphMiner {
-	private static String parameterSplit = "@@@";
 	private SocialGraphMiner discoveryMiner, baseMiner;
 	private int withholdTopOfBaseMiner;
 
@@ -28,19 +27,6 @@ public class DifferenceMiner extends SocialGraphMiner {
 		this.discoveryMiner = discoveryMiner;
 		this.baseMiner = baseMiner;
 		this.withholdTopOfBaseMiner = withholdTopOfBaseMiner;
-	}
-
-	@Override
-	public void newInteraction(Interaction interaction, String neighborModelParameters, InteractionType interactionType) {
-		String[] params = neighborModelParameters.split(parameterSplit);
-		discoveryMiner.newInteraction(interaction, params[0], interactionType);
-		if(baseMiner!=discoveryMiner)
-			baseMiner.newInteraction(interaction, params[1], interactionType);
-	}
-
-	@Override
-	public String getModelParameters(Interaction interaction) {
-		return discoveryMiner.getModelParameters(interaction)+parameterSplit+baseMiner.getModelParameters(interaction);
 	}
 
 	@Override
@@ -74,7 +60,7 @@ public class DifferenceMiner extends SocialGraphMiner {
     	return discoveredInteractions;
     }
 
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected static <T1, T2> List<T1> sort(Map<T1, T2> unsortedMap) {
 		return unsortedMap
 				.entrySet()
@@ -84,7 +70,7 @@ public class DifferenceMiner extends SocialGraphMiner {
 			    .collect(Collectors.toList());
 	}
 	
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected static <T1, T2> List<T1> sort(Map<T1, T2> unsortedMap, int topK) {
 		return unsortedMap
 				.entrySet()
@@ -93,6 +79,21 @@ public class DifferenceMiner extends SocialGraphMiner {
 			    .map(e -> e.getKey())
 			    .limit(topK)
 			    .collect(Collectors.toList());
+	}
+
+	@Override
+	public void newInteractionFromMap(Interaction interaction, SocialGraphMinerParameters neighborModelParameters, InteractionType interactionType) {
+		discoveryMiner.newInteractionFromMap(interaction, neighborModelParameters==null?null:neighborModelParameters.getNested("discovery_miner"), interactionType);
+		if(baseMiner!=discoveryMiner)
+			baseMiner.newInteractionFromMap(interaction, neighborModelParameters==null?null:neighborModelParameters.getNested("base_miner"), interactionType);
+	}
+
+	@Override
+	public SocialGraphMinerParameters getModelParametersAsMap(Interaction interaction) {
+		SocialGraphMinerParameters ret = new SocialGraphMinerParameters();
+		ret.put("discovery_miner", discoveryMiner.getModelParametersAsMap(interaction));
+		ret.put("base_miner", baseMiner.getModelParametersAsMap(interaction));
+		return ret;
 	}
 
 }

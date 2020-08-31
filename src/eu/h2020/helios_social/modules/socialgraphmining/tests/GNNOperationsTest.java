@@ -4,6 +4,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import eu.h2020.helios_social.core.contextualegonetwork.Utils;
+import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.LSTM;
+import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.LSTM.LSTMState;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Loss;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Matrix;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Tensor;

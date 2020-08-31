@@ -1,6 +1,8 @@
 package eu.h2020.helios_social.modules.socialgraphmining.GNN;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 import eu.h2020.helios_social.core.contextualegonetwork.Context;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
@@ -9,9 +11,12 @@ import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 import eu.h2020.helios_social.core.contextualegonetwork.Node;
 import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
+import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.LSTM;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Loss;
+import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Optimizer;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Sort;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Tensor;
+import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.InteractionType;
 
 /**
  * This class provides an implementation of a {@link SocialGraphMiner} based on
@@ -37,6 +42,8 @@ public class GNNMiner extends SocialGraphMiner {
 	private boolean enableTrainingExamplePropagation = false;
 	private boolean enableSpectralAlignment = false;
 	private boolean secondOrderProximity = false;
+	private int LSTMdepth = 0;
+	private static HashMap<String, Tensor> globalEmbeddingRegistry = new HashMap<String, Tensor>();//if instantiated by default, it simulates constant federated communication
 	
 	/**
 	 * Instantiates a {@link GNNMiner} on a given contextual ego network.
@@ -56,6 +63,11 @@ public class GNNMiner extends SocialGraphMiner {
 	 */
 	public GNNMiner setLearningRate(double learningRate) {
 		this.learningRate = learningRate;
+		return this;
+	}
+	
+	public GNNMiner setLSTMDepth(int LSTMdepth) {
+		this.LSTMdepth = LSTMdepth;
 		return this;
 	}
 	
@@ -142,7 +154,7 @@ public class GNNMiner extends SocialGraphMiner {
 	}
 	
 	/**
-	 * Sets the threshold weight at which old training examples are removed (default is 0.01).
+	 * Sets the threshold weight at which old training examples are removed (default is 0.1).
 	 * Basically, if the degradation set by set by {@link #setTrainingExampleDegradation} 
 	 * remains constant throughout training iterations, training examples are removed if
 	 * degradation^n < trainingExampleRemovalThreshold
@@ -211,37 +223,61 @@ public class GNNMiner extends SocialGraphMiner {
 	}
 	
 	@Override
-	public synchronized void newInteraction(Interaction interaction, String neighborModelParameters, InteractionType interactionType) {
-		if(neighborModelParameters==null || interaction.getEdge().getEgo()==null || interactionType==InteractionType.SEND)
+	public synchronized void newInteractionFromMap(Interaction interaction, SocialGraphMinerParameters params, InteractionType interactionType) {
+		if(params==null || interaction.getEdge().getEgo()==null || interactionType==InteractionType.SEND)
 			return;
-		String[] receivedTensors = neighborModelParameters.split("\\;");
 		Edge edge = interaction.getEdge();
 		if(updateEgoEmbeddingsFromNeighbors!=0)
-			edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().selfMultiply(1-updateEgoEmbeddingsFromNeighbors).selfAdd(new Tensor(receivedTensors[2]).selfMultiply(updateEgoEmbeddingsFromNeighbors));
+			edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().selfMultiply(1-updateEgoEmbeddingsFromNeighbors).selfAdd(((Tensor)params.get("ego_embedding")).multiply(updateEgoEmbeddingsFromNeighbors));
 		
-		Tensor alterTensor = transformLike(new Tensor(receivedTensors[0]),
-				    (new Tensor(receivedTensors[2])).selfAdd(new Tensor(receivedTensors[0])), 
+		if(globalEmbeddingRegistry!=null)
+			for(Node node : interaction.getEdge().getContext().getNodes()) {
+				Tensor embedding = globalEmbeddingRegistry.get(node.getId());
+				if(embedding!=null) {
+					node.getOrCreateInstance(GNNNodeData.class).forceSetEmbedding(embedding.add(0));
+					//node.getOrCreateInstance(GNNNodeData.class).setRegularization(embedding.add(0));//worsens results
+				}
+			}
+		
+		Tensor alterTensor = transformLike((Tensor)params.get("ego_embedding"),
+				    ((Tensor)params.get("ego_embedding"))
+				    			.add((Tensor)params.get("alter_embedding")), 
 					edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding()
 								.add(edge.getAlter().getOrCreateInstance(GNNNodeData.class).getEmbedding()));
-		Tensor alterAggregation = transformLike(new Tensor(receivedTensors[1]),
-			    (new Tensor(receivedTensors[2])).selfAdd(new Tensor(receivedTensors[0])), 
-				edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding()
-							.add(edge.getAlter().getOrCreateInstance(GNNNodeData.class).getEmbedding()));
-		double receivedConfidence = Double.parseDouble(receivedTensors[3]);
-		unpackExamples(receivedTensors[4], edge.getContext());
+		Tensor alterAggregation = transformLike((Tensor)params.get("alter_embedding"),
+			    ((Tensor)params.get("ego_embedding"))
+    							.add((Tensor)params.get("alter_embedding")),  
+					edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding()
+								.add(edge.getAlter().getOrCreateInstance(GNNNodeData.class).getEmbedding()));
+		double receivedConfidence = (double)params.get("confidence");
+		if(params.get("packed_examples")!=null)
+			unpackExamples((String)params.get("packed_examples"), edge.getContext());
+		
 		edge.getEgo().getOrCreateInstance(GNNNodeData.class).setNeighborAggregation(aggregateNeighborEmbeddings(edge.getContext()));
 		//edge.getEgo().getOrCreateInstance(GNNNodeData.class).setRegularization(edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding());
 		
+		//if(globalEmbeddingRegistry==null)
 		edge.getAlter().getOrCreateInstance(GNNNodeData.class).setRegularization(alterTensor.selfMultiply(regularizationAbsorbsion));
 		edge.getAlter().getOrCreateInstance(GNNNodeData.class).setNeighborAggregation(alterAggregation);
 		
-		if(interactionType==InteractionType.RECEIVE_REPLY || interactionType==InteractionType.RECEIVE) {
+		if(interactionType==InteractionType.RECEIVE_REPLY || interactionType==InteractionType.RECEIVE) {			
 			ContextTrainingExampleData trainingExampleData = edge.getContext().getOrCreateInstance(ContextTrainingExampleData.class);
 
 			if(trainingExampleData.transformToDstEmbedding==null) 
 				trainingExampleData.transformToDstEmbedding = edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().zeroCopy().setToOnes();
 			if(trainingExampleData.transformToSrcEmbedding==null) 
 				trainingExampleData.transformToSrcEmbedding = edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().zeroCopy().setToOnes();
+			if(trainingExampleData.lstm==null) {
+				int embeddingsDims = edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().size();
+				trainingExampleData.lstm = new LSTM(new Optimizer.Regularization(new Optimizer.Adam(1), 1.E-12), embeddingsDims, embeddingsDims);
+			}
+			if(params.get("lstm")!=null)
+				trainingExampleData.lstm.aggregate((LSTM)params.get("lstm"));
+			if(params.get("src_embedding")!=null)
+				trainingExampleData.transformToSrcEmbedding.selfMultiply(0.5).selfAdd(((Tensor)params.get("src_embedding")).multiply(0.5));
+			if(params.get("dst_embedding")!=null)
+				trainingExampleData.transformToDstEmbedding.selfMultiply(0.5).selfAdd(((Tensor)params.get("dst_embedding")).multiply(0.5));
+			
 			
 			if(trainingExampleDegradation!=1)
 				trainingExampleData.degrade(trainingExampleDegradation*receivedConfidence+(1-receivedConfidence), trainingExampleRemovalThreshold);
@@ -256,6 +292,18 @@ public class GNNMiner extends SocialGraphMiner {
 					trainingExampleData.getTrainingExampleList().add(new TrainingExample(negativeNode, edge.getDst(), 0));
 				}
 			train(trainingExampleData);
+			for(Node node : edge.getContext().getNodes())
+				node.getOrCreateInstance(GNNNodeData.class).addEmbeddingToHistory();
+			//edge.getEgo().getOrCreateInstance(GNNNodeData.class).addEmbeddingToHistory();
+			//edge.getAlter().getOrCreateInstance(GNNNodeData.class).addEmbeddingToHistory();
+			trainLSTM(trainingExampleData, trainingExampleData.lstm);
+			
+
+			if(globalEmbeddingRegistry!=null) {
+				Node node = edge.getEgo();
+				//for(Node node : interaction.getEdge().getContext().getNodes()) 
+					globalEmbeddingRegistry.put(node.getId(), node.getOrCreateInstance(GNNNodeData.class).getEmbedding());
+			}
 		}
 	}
 	
@@ -327,15 +375,72 @@ public class GNNMiner extends SocialGraphMiner {
 	}
 	
 	@Override
-	public String getModelParameters(Interaction interaction) {
+	public SocialGraphMinerParameters getModelParametersAsMap(Interaction interaction) {
 		if(interaction==null) 
 			return Utils.error("Could not find given context", null);
 		Context context = interaction.getEdge().getContext();
-		return permute(interaction.getEdge().getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding(), egoDeniability).toString()+";"
+		SocialGraphMinerParameters ret = new SocialGraphMinerParameters();
+		ret.put("ego_embedding", permute(interaction.getEdge().getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding(), egoDeniability));
+		ret.put("alter_embedding", permute(interaction.getEdge().getAlter().getOrCreateInstance(GNNNodeData.class).getEmbedding(), egoDeniability));
+		ret.put("confidence", (Double)getConfidence(context));
+		if(enableTrainingExamplePropagation)
+			ret.put("packed_examples", packExamples(context));
+		ret.put("src_embedding", context.getOrCreateInstance(ContextTrainingExampleData.class).transformToSrcEmbedding);
+		ret.put("dst_embedding", context.getOrCreateInstance(ContextTrainingExampleData.class).transformToDstEmbedding);
+		//if(context.getOrCreateInstance(ContextTrainingExampleData.class).lstm!=null)
+		//	ret.put("LSTM", context.getOrCreateInstance(ContextTrainingExampleData.class).lstm);
+		/*return permute(interaction.getEdge().getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding(), egoDeniability).toString()+";"
 			 + permute(aggregateNeighborEmbeddings(context), neighborDeniability).toString()+";"
 			 + permute(interaction.getEdge().getAlter().getOrCreateInstance(GNNNodeData.class).getEmbedding(), egoDeniability).toString()+";"
 			 + getConfidence(context)+";"
-			 + packExamples(context)+";";
+			 + packExamples(context)+";"
+			 + packLSTM(context)+";";*/
+		return ret;
+	}
+	
+	protected void trainLSTM(ContextTrainingExampleData trainingExampleData, LSTM lstm) {
+		if(LSTMdepth<=0)
+			return;
+		lstm.getOptimizer().reset();
+		double previousError = -1;
+		Tensor[] inputsSrc = new Tensor[LSTMdepth];
+		Tensor[] inputsDst = new Tensor[LSTMdepth];
+		for(int epoch=0;epoch<maxEpoch;epoch++) {
+			double loss = 0;
+			for(TrainingExample trainingExample : trainingExampleData.getTrainingExampleList()) {
+				LinkedList<Tensor> historySrc = trainingExample.getSrc().getOrCreateInstance(GNNNodeData.class).getEmbeddingHistory();
+				LinkedList<Tensor> historyDst = trainingExample.getDst().getOrCreateInstance(GNNNodeData.class).getEmbeddingHistory();
+				if(historySrc.size()>=LSTMdepth && historyDst.size()>=LSTMdepth) {
+					for(int j=0;j<LSTMdepth;j++)
+						inputsSrc[LSTMdepth-1-j] = historySrc.get(historySrc.size()-1-j);
+					for(int j=0;j<LSTMdepth;j++)
+						inputsDst[LSTMdepth-1-j] = historyDst.get(historyDst.size()-1-j);
+					Tensor predictSrc = lstm.predict(inputsSrc);
+					Tensor predictDst = lstm.predict(inputsDst);
+					loss += Loss.crossEntropy(Loss.sigmoid(predictSrc.dot(predictDst)), trainingExample.getLabel());
+					lstm.startTape();
+					double ce_derivative  = Loss.crossEntropySigmoidDerivative(predictSrc.dot(predictDst), trainingExample.getLabel());
+					lstm.trainOnOutputError(inputsSrc, predictDst.multiply(ce_derivative));
+					lstm.trainOnOutputError(inputsDst, predictSrc.multiply(ce_derivative));
+					lstm.endTape();
+				}
+			}
+			/*for(Node node : context.getNodes()) {
+				ArrayList<Tensor> history = node.getOrCreateInstance(GNNNodeData.class).getEmbeddingHistory();
+				if(history.size()>LSTMdepth) {
+					lstm.startTape();
+					for(int i=0;i<history.size()-LSTMdepth;i++) {
+						for(int j=0;j<LSTMdepth;j++)
+							inputs[j] = history.get(i+j);
+						total_error += lstm.train(inputs, history.get(i+LSTMdepth))/context.getNodes().size()/(history.size()-LSTMdepth);
+					}
+					lstm.endTape();
+				}
+			}*/
+			if(Math.abs(previousError-loss)<convergenceRelativeLoss*loss) 
+				break;
+			previousError = loss;
+		}
 	}
 	
 	protected void train(ContextTrainingExampleData trainingExampleData) {
@@ -432,6 +537,15 @@ public class GNNMiner extends SocialGraphMiner {
 									.multiply(trainingExampleData.transformToDstEmbedding)
 									.selfMultiply(crossEntropyDerivative)
 									.selfAdd(derivatives.getOrDefault(v, zero)));
+				
+				transformToSrcEmbeddingDerivative = embedding_v
+						.multiply(u.getOrCreateInstance(GNNNodeData.class).getEmbedding())
+						.selfMultiply(crossEntropyDerivative)
+						.selfAdd(transformToSrcEmbeddingDerivative);
+				transformToDstEmbeddingDerivative = embedding_u
+						.multiply(v.getOrCreateInstance(GNNNodeData.class).getEmbedding())
+						.selfMultiply(crossEntropyDerivative)
+						.selfAdd(transformToSrcEmbeddingDerivative);
 			}
 		}
 		for(Node u : derivatives.keySet()) {
@@ -441,14 +555,14 @@ public class GNNMiner extends SocialGraphMiner {
 				.updateEmbedding(derivatives.get(u).multiply(1./totalWeights.get(u)));
 		}
 		
-		if(outgoingEdgeLearningRateMultiplier!=0)
+		if(outgoingEdgeLearningRateMultiplier!=0 && transformToSrcEmbeddingDerivativeWeight!=0)
 			trainingExampleData.transformToSrcEmbedding = transformToSrcEmbeddingDerivative
-				.multiply(-outgoingEdgeLearningRateMultiplier*learningRate/transformToSrcEmbeddingDerivativeWeight)
-				.add(trainingExampleData.transformToSrcEmbedding.selfMultiply(1-regularizationWeight*outgoingEdgeLearningRateMultiplier));
-		if(incommingEdgeLearningRateMultiplier!=0)
+				.selfMultiply(outgoingEdgeLearningRateMultiplier*learningRate/transformToSrcEmbeddingDerivativeWeight)
+				.selfAdd(trainingExampleData.transformToSrcEmbedding.selfMultiply(1-regularizationWeight*learningRate*outgoingEdgeLearningRateMultiplier));
+		if(incommingEdgeLearningRateMultiplier!=0 && transformToDstEmbeddingDerivativeWeight!=0)
 			trainingExampleData.transformToDstEmbedding = transformToDstEmbeddingDerivative
-					.multiply(-incommingEdgeLearningRateMultiplier*learningRate/transformToDstEmbeddingDerivativeWeight)
-					.add(trainingExampleData.transformToDstEmbedding.selfMultiply(1-regularizationWeight*incommingEdgeLearningRateMultiplier));
+					.selfMultiply(incommingEdgeLearningRateMultiplier*learningRate/transformToDstEmbeddingDerivativeWeight)
+					.selfAdd(trainingExampleData.transformToDstEmbedding.selfMultiply(1-regularizationWeight*learningRate*incommingEdgeLearningRateMultiplier));
 		return loss;
 	}
 
@@ -465,6 +579,21 @@ public class GNNMiner extends SocialGraphMiner {
 		Tensor embedding_v = v.getOrCreateInstance(GNNNodeData.class).getEmbedding().multiply(trainingExampleData.transformToDstEmbedding);
 		Tensor secondOrder_u = u.getOrCreateInstance(GNNNodeData.class).getNeighborAggregation().multiply(trainingExampleData.transformToSrcEmbedding);
 		Tensor secondOrder_v = v.getOrCreateInstance(GNNNodeData.class).getNeighborAggregation().multiply(trainingExampleData.transformToSrcEmbedding);
+		
+		if(LSTMdepth>0) {
+			LinkedList<Tensor> historySrc = u.getOrCreateInstance(GNNNodeData.class).getEmbeddingHistory();
+			LinkedList<Tensor> historyDst = v.getOrCreateInstance(GNNNodeData.class).getEmbeddingHistory();
+			if(historySrc.size()>=LSTMdepth && historyDst.size()>=LSTMdepth) {
+				Tensor[] inputsSrc = new Tensor[LSTMdepth];
+				Tensor[] inputsDst = new Tensor[LSTMdepth];
+				for(int j=0;j<LSTMdepth;j++)
+					inputsSrc[LSTMdepth-1-j] = historySrc.get(historySrc.size()-1-j);
+				for(int j=0;j<LSTMdepth;j++)
+					inputsDst[LSTMdepth-1-j] = historyDst.get(historyDst.size()-1-j);
+				embedding_u = trainingExampleData.lstm.predict(inputsSrc);
+				embedding_v = trainingExampleData.lstm.predict(inputsDst);
+			}
+		}
 		
 		double firstOrderActivation = Loss.sigmoid(embedding_u.dot(embedding_v));
 		double secondOrderActivation = secondOrderProximity?Loss.sigmoid(embedding_u.dot(secondOrder_v))*Loss.sigmoid(embedding_v.dot(secondOrder_u)):1;

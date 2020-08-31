@@ -1,5 +1,8 @@
 package eu.h2020.helios_social.modules.socialgraphmining.GNN;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Tensor;
 
 
@@ -20,14 +23,36 @@ public class GNNNodeData {
 	private Tensor regularization = null;
 	private Tensor neighborAggregation = null;
 	
+	private LinkedList<Tensor> embeddingHistory = null;
+	
 	public GNNNodeData() {}
 	protected void initializeIfNeeded() {
 		if(embedding==null) {
 			embedding = new Tensor(embeddingSize);
 			regularization = new Tensor(embeddingSize);
 			neighborAggregation = new Tensor(embeddingSize);
+			embeddingHistory = new LinkedList<Tensor>();
 			embedding.setToRandom();
 		}
+	}
+	
+	public synchronized void addEmbeddingToHistory() {
+		initializeIfNeeded();
+		if(embeddingHistory.size()>10)
+			embeddingHistory.remove(0);
+		embeddingHistory.add(embedding.add(0));
+	}
+	
+	public synchronized void addRegularizationToHistory() {
+		initializeIfNeeded();
+		if(embeddingHistory.size()>100)
+			embeddingHistory.removeFirst();
+		embeddingHistory.add(regularization.add(0));
+	}
+	
+	public synchronized LinkedList<Tensor> getEmbeddingHistory() {
+		initializeIfNeeded();
+		return embeddingHistory;
 	}
 	
 	/**
@@ -40,13 +65,23 @@ public class GNNNodeData {
 	}
 	
 	/**
+	 * Forcibly sets an embedding tensor. Normally, embeddings are updated through {@link #updateEmbedding(Tensor)}.
+	 * @param embedding The embedding Tensor
+	 */
+	synchronized void forceSetEmbedding(Tensor embedding) {
+		initializeIfNeeded();
+		this.embedding = embedding;
+	}
+	
+	/**
 	 * Sets a neighbor aggregation that can be retrieved with {@link #getNeighborAggregation()}. This
 	 * aggregation is computed by other devices and this function is called when receiving it as part
 	 * of the shared parameters. These operations are automatically performed by
-	 * {@link GNNMiner#newInteraction(Interaction, String, InteractionType)}
+	 * {@link GNNMiner#newInteractionFromMap(Interaction, String, InteractionType)}
 	 * @param neighborAggregation The received Tensor of neighbor aggregation
 	 */
 	public synchronized void setNeighborAggregation(Tensor neighborAggregation) {
+		initializeIfNeeded();
 		this.neighborAggregation = neighborAggregation;
 	}
 	
@@ -56,6 +91,7 @@ public class GNNNodeData {
 	 * @see #setNeighborAggregation(Tensor)
 	 */
 	public synchronized Tensor getNeighborAggregation() {
+		initializeIfNeeded();
 		return neighborAggregation;
 	}
 	
@@ -68,6 +104,7 @@ public class GNNNodeData {
 	 * @see #setRegularizationWeight(double)
 	 */
 	public synchronized void setRegularization(Tensor regularization) {
+		initializeIfNeeded();
 		this.regularization = regularization;
 	}
 	

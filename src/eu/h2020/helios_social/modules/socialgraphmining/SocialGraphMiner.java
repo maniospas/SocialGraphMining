@@ -1,6 +1,7 @@
 package eu.h2020.helios_social.modules.socialgraphmining;
 
 import java.util.HashMap;
+import java.util.Set;
 
 import eu.h2020.helios_social.core.contextualegonetwork.Context;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
@@ -15,6 +16,25 @@ import eu.h2020.helios_social.core.contextualegonetwork.Node;
 public abstract class SocialGraphMiner {
 	public enum InteractionType {SEND, RECEIVE, RECEIVE_REPLY};
 	
+	public static class SocialGraphMinerParameters {
+		private HashMap<String, Object> params;
+		public SocialGraphMinerParameters() {
+			params = new HashMap<String, Object>();
+		}
+		public Object get(String key) {
+			return params.get(key);
+		}
+		public SocialGraphMinerParameters getNested(String key) {
+			return (SocialGraphMinerParameters)get(key);
+		}
+		public void put(String key, Object value) {
+			params.put(key, value);
+		}
+		public Set<String> getKeys() {
+			return params.keySet();
+		}
+	}
+	
 	private ContextualEgoNetwork contextualEgoNetwork;
 	protected SocialGraphMiner(ContextualEgoNetwork contextualEgoNetwork) {
 		if(contextualEgoNetwork==null)
@@ -24,19 +44,26 @@ public abstract class SocialGraphMiner {
 	public ContextualEgoNetwork getContextualEgoNetwork() {
 		return contextualEgoNetwork;
 	}
+	public abstract void newInteractionFromMap(Interaction interaction, SocialGraphMinerParameters neighborModelParameters, InteractionType interactionType);
 	/** 
 	 * Makes the graph miner aware that a user received an interaction from another user with {@link #getModelParameters}.
 	 * @param interaction A new interaction the user initiates expressed in terms of the contextual ego network
 	 * @param neighborModelParameters The neighbor parameters. May be null for when interactionType==SEND.
 	 * @param interactionType The type of the interaction (SEND, RECEIVE or RECEIVE_REPLY corresponds to acknowledging the receive).
 	 */
-	public abstract void newInteraction(Interaction interaction, String neighborModelParameters, InteractionType interactionType);
+	public void newInteraction(Interaction interaction, String neighborModelParameters, InteractionType interactionType) {
+		Object parameters = neighborModelParameters==null?null:getContextualEgoNetwork().getSerializer().deserializeFromString(neighborModelParameters);
+		newInteractionFromMap(interaction, (SocialGraphMinerParameters) parameters, interactionType);
+	}
+	public abstract SocialGraphMinerParameters getModelParametersAsMap(Interaction interaction);
     /**
 	 * Retrieves the parameters of the mining model that will be sent alongside the created interaction.
      * @param interaction The new interaction the user receives expressed in terms of the contextual ego network
      * @return A String serialization of model parameters.
      */
-    public abstract String getModelParameters(Interaction interaction);
+    public String getModelParameters(Interaction interaction) {
+    	return getContextualEgoNetwork().getSerializer().serializeToString(getModelParametersAsMap(interaction));
+    }
     /**
      * Predicts the weight of performing a SEND interaction between the given context's ego and a destination node
      * within a given context. This method should typically return values in the [0,1] range, where higher values 

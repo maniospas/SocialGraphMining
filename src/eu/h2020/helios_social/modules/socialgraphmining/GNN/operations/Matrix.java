@@ -12,6 +12,9 @@ public class Matrix extends Tensor {
 		this.cols = cols;
 	}
 	
+	protected Matrix() {
+	}
+	
 	@Override
 	public Matrix zeroCopy() {
 		return new Matrix(rows, cols);
@@ -89,5 +92,31 @@ public class Matrix extends Tensor {
 			for(int col=0;col<vertical.size();col++) 
 				ret.put(row, col, horizontal.get(row)*vertical.get(col));
 		return ret;
+	}
+	
+	@Override
+	protected void assertMatching(Tensor other) {
+		if(!(other instanceof Matrix))
+			throw new RuntimeException("Non-compliant: "+describe()+" vs "+other.describe());
+		if(rows!=((Matrix)other).rows || cols!=((Matrix)other).cols)
+			throw new RuntimeException("Non-compliant: "+describe()+" vs "+other.describe());
+	}
+	
+	/*@Override
+	public String toString() {
+		String ret = "";
+		for(int row=0;row<rows;row++) {
+			if(cols>0)
+				ret += get(row, 0);
+			for(int col=1;col<cols;col++) 
+				ret += ","+get(row, col);
+			ret += "\n";
+		}
+		return "[\n"+ret+"]";
+	}*/
+	
+	@Override
+	public String describe() {
+		return "Matrix ("+rows+","+cols+")";
 	}
 }

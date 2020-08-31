@@ -42,7 +42,6 @@ public class Tensor {
 			put(i, Math.random());
 		return this;
 	}
-	
 	/**
 	 * Assign a value to a tensor element. All tensor operations use this function to wrap
 	 * element assignments.
@@ -97,6 +96,14 @@ public class Tensor {
 			throw new RuntimeException("Different sizes: given "+size+" vs "+size());
 	}
 	/**
+	 * Asserts that the tensor's dimensions match with another tensor. This check can be made
+	 * more complex by derived classes, but for a base Tensor instance it calls {@link #assertSize(int)}.
+	 * @param other The other tensor to compare with.
+	 */
+	protected void assertMatching(Tensor other) {
+		assertSize(other.size());
+	}
+	/**
 	 * @return A tensor with the same size but zero elements
 	 */
 	public Tensor zeroCopy() {
@@ -107,10 +114,20 @@ public class Tensor {
 	 * @return a new Tensor that stores the outcome of addition
 	 */
 	public final Tensor add(Tensor tensor) {
-		assertSize(tensor.size());
+		assertMatching(tensor);
 		Tensor res = zeroCopy();
 		for(int i=0;i<values.length;i++)
 			res.put(i, get(i)+tensor.get(i));
+		return res;
+	}
+	/**
+	 * @param tensor The value to add to each element
+	 * @return a new Tensor that stores the outcome of addition
+	 */
+	public final Tensor add(double value) {
+		Tensor res = zeroCopy();
+		for(int i=0;i<values.length;i++)
+			res.put(i, get(i)+value);
 		return res;
 	}
 	/**
@@ -119,10 +136,21 @@ public class Tensor {
 	 * @return <code>this</code> Tensor instance.
 	 */
 	public final Tensor selfAdd(Tensor tensor) {
-		assertSize(tensor.size());
+		assertMatching(tensor);
 		Tensor res = this;
 		for(int i=0;i<values.length;i++)
 			res.put(i, get(i)+tensor.get(i));
+		return res;
+	}
+	/**
+	 * Performs in-memory addition to the Tensor, storing the result in itself.
+	 * @param tensor The value to add to each tensor element.
+	 * @return <code>this</code> Tensor instance.
+	 */
+	public final Tensor selfAdd(double value) {
+		Tensor res = this;
+		for(int i=0;i<values.length;i++)
+			res.put(i, get(i)+value);
 		return res;
 	}
 	/**
@@ -130,7 +158,7 @@ public class Tensor {
 	 * @return a new Tensor that stores the outcome of subtraction
 	 */
 	public final Tensor subtract(Tensor tensor) {
-		assertSize(tensor.size());
+		assertMatching(tensor);
 		Tensor res = zeroCopy();
 		for(int i=0;i<values.length;i++)
 			res.put(i, get(i)-tensor.get(i));
@@ -142,7 +170,7 @@ public class Tensor {
 	 * @return <code>this</code> Tensor instance.
 	 */
 	public final Tensor selfSubtract(Tensor tensor) {
-		assertSize(tensor.size());
+		assertMatching(tensor);
 		Tensor res = this;
 		for(int i=0;i<values.length;i++)
 			res.put(i, get(i)-tensor.get(i));
@@ -153,7 +181,7 @@ public class Tensor {
 	 * @return A new Tensor that stores the outcome of the multiplication.
 	 */
 	public final Tensor multiply(Tensor tensor) {
-		assertSize(tensor.size());
+		assertMatching(tensor);
 		Tensor res = zeroCopy();
 		for(int i=0;i<values.length;i++)
 			res.put(i, get(i)*tensor.get(i));
@@ -165,7 +193,7 @@ public class Tensor {
 	 * @return <code>this</code> Tensor instance.
 	 */
 	public final Tensor selfMultiply(Tensor tensor) {
-		assertSize(tensor.size());
+		assertMatching(tensor);
 		Tensor res = this;
 		for(int i=0;i<values.length;i++)
 			res.put(i, get(i)*tensor.get(i));
@@ -193,12 +221,52 @@ public class Tensor {
 		return res;
 	}
 	/**
+	 * @return A new Tensor that stores the outcome of finding the absolute square root of each element.
+	 */
+	public final Tensor sqrt() {
+		Tensor res = zeroCopy();
+		for(int i=0;i<values.length;i++)
+			res.put(i, Math.sqrt(Math.abs(get(i))));
+		return res;
+	}
+	/**
+	 * Performs in-memory the square root of the absolute of each element.
+	 * @return <code>this</code> Tensor instance.
+	 */
+	public final Tensor selfSqrt() {
+		Tensor res = this;
+		for(int i=0;i<values.length;i++)
+			res.put(i, Math.sqrt(Math.abs(get(i))));
+		return res;
+	}
+	/**
+	 * @return A new Tensor with inversed each non-zero element.
+	 */
+	public final Tensor inverse() {
+		Tensor res = zeroCopy();
+		for(int i=0;i<values.length;i++)
+			if(get(i)!=0)
+				res.put(i, 1./get(i));
+		return res;
+	}
+	/**
+	 * Performs in-memory the inverse of each non-zero element.
+	 * @return <code>this</code> Tensor instance.
+	 */
+	public final Tensor selfInverse() {
+		Tensor res = this;
+		for(int i=0;i<values.length;i++)
+			if(get(i)!=0)
+				res.put(i, 1./get(i));
+		return res;
+	}
+	/**
 	 * Performs the dot product between this and another tensor.
 	 * @param tensor The tensor with which to find the product.
 	 * @return The dot product between the tensors.
 	 */
 	public final double dot(Tensor tensor) {
-		assertSize(tensor.size());
+		assertMatching(tensor);
 		double res = 0;
 		for(int i=0;i<values.length;i++)
 			res += get(i)*tensor.get(i);
@@ -211,8 +279,8 @@ public class Tensor {
 	 * @return The triple dot product between the tensors.
 	 */
 	public final double dot(Tensor tensor1, Tensor tensor2) {
-		assertSize(tensor1.size());
-		assertSize(tensor2.size());
+		assertMatching(tensor1);
+		assertMatching(tensor2);
 		double res = 0;
 		for(int i=0;i<values.length;i++)
 			res += get(i)*tensor1.get(i)*tensor2.get(i);
@@ -253,7 +321,7 @@ public class Tensor {
 		return res;
 	}
 	/**
-	 * L2-normalizes the tensor elements.
+	 * L2-normalizes the tensor's elements.
 	 * @return <code>this</code> Tensor instance.
 	 * @see #normalized()
 	 */
@@ -300,6 +368,20 @@ public class Tensor {
 		for(int i=0;i<this.values.length;i++)
 			values[i] = this.values[i];
 		return values;
+	}
+	
+	public static Tensor fromDouble(double value) {
+		Tensor ret = new Tensor(1);
+		ret.put(0, value);
+		return ret;
+	}
+	
+	public double toDouble() {
+		assertSize(1);
+		return get(0);
+	}
+	public String describe() {
+		return "Tensor ("+size()+")";
 	}
 
 }

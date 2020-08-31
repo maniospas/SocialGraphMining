@@ -16,6 +16,7 @@ import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.InteractionType;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.DifferenceMiner;
+import eu.h2020.helios_social.modules.socialgraphmining.heuristics.ProbabilityMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.RepeatAndReplyMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.Accumulate;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.HitRate;
@@ -38,7 +39,10 @@ public class Example {
 			SocialGraphMiner repeatAndReply = new RepeatAndReplyMiner(contextualEgoNetwork);
 			this.miner = new DifferenceMiner(
 					//repeatAndReply,
-					     (new GNNMiner(contextualEgoNetwork)).setRegularizationAbsorbsion(1),
+					//new ProbabilityMiner(contextualEgoNetwork),
+					     (new GNNMiner(contextualEgoNetwork)).setRegularizationAbsorbsion(0).setLSTMDepth(0)
+					     	.setTrainingExampleDegradation(0.5).setTrainingExampleRemovalThreshold(0.01).setDeniability(0, 0)
+					     	.setTrainingExamplePropagation(false),
 						 repeatAndReply, 1);
 		}
 		public String getName() {
@@ -110,6 +114,8 @@ public class Example {
 				System.out.println("#"+currentInteraction+": "+evaluation);
 			if(currentInteraction%100==0)
 				result += ","+evaluation;
+			if(currentInteraction%10000==0)
+				System.out.println("["+result.substring(1)+"];\n");
 			devices.get(u).send(devices.get(v));
 			currentInteraction++;
 		}

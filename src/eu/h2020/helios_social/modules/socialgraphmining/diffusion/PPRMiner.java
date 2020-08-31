@@ -1,5 +1,7 @@
 package eu.h2020.helios_social.modules.socialgraphmining.diffusion;
 
+import java.util.HashMap;
+
 import eu.h2020.helios_social.core.contextualegonetwork.Context;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
@@ -51,6 +53,16 @@ public class PPRMiner extends SocialGraphMiner {
 		Tensor egoEmbedding = destinationNode.getContextualEgoNetwork().getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding();
 		Tensor destinationEmbedding = destinationNode.getOrCreateInstance(GNNNodeData.class).getEmbedding();;
 		return Loss.sigmoid(egoEmbedding.dot(destinationEmbedding));
+	}
+
+	@Override
+	public void newInteractionFromMap(Interaction interaction, SocialGraphMinerParameters neighborModelParameters, InteractionType interactionType) {
+		
+	}
+
+	@Override
+	public SocialGraphMinerParameters getModelParametersAsMap(Interaction interaction) {
+		return null;
 	}
 
 }

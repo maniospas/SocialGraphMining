@@ -8,6 +8,7 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses({
         GNNMinerTest.class,
         GNNOperationsTest.class,
+        LSTMTest.class,
         HeuristicMinersTest.class})
 
 public class AllTests {

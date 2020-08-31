@@ -17,13 +17,13 @@ public class MemoryMiner extends SocialGraphMiner {
 	}
 
 	@Override
-	public void newInteraction(Interaction interaction, String neighborModelParameters, InteractionType interactionType) {
-		baseMiner.newInteraction(interaction, neighborModelParameters, interactionType);
+	public void newInteractionFromMap(Interaction interaction, SocialGraphMinerParameters neighborModelParameters, InteractionType interactionType) {
+		baseMiner.newInteractionFromMap(interaction, neighborModelParameters, interactionType);
 	}
 
 	@Override
-	public String getModelParameters(Interaction interaction) {
-		return baseMiner.getModelParameters(interaction);
+	public SocialGraphMinerParameters getModelParametersAsMap(Interaction interaction) {
+		return baseMiner.getModelParametersAsMap(interaction);
 	}
 
 	@Override
