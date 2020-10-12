@@ -4,6 +4,12 @@ import java.util.HashMap;
 
 import eu.h2020.helios_social.core.contextualegonetwork.Serializer.Serialization;
 
+/**
+ * Provides an interface for training tensors. Has a {@link #reset()} method that starts potential training memory from scratch.
+ * Has an {@link #update(Tensor, Tensor)} method that, given a current value and a gradient Tensor suggests a new value.
+ * 
+ * @author Emmanouil Krasanakis
+ */
 public abstract interface Optimizer {
 	public void update(Tensor value, Tensor gradient);
 	public default void reset() {};

@@ -10,10 +10,10 @@ import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 /**
  * @author Emmanouil Krasanakis
  */
-public class DiscoveryRank implements Measure {
+public class DiscoveryExactRank implements Measure {
 	private int requiredCandidates;
 	
-	public DiscoveryRank(int requiredCandidates) {
+	public DiscoveryExactRank(int requiredCandidates) {
 		this.requiredCandidates = requiredCandidates;
 	}
 
@@ -27,9 +27,9 @@ public class DiscoveryRank implements Measure {
 			return Double.NaN;
 		int countLargerValues = 0;
 		for(double value : maps.values())
-			if(value >= dstValue)
+			if(value > dstValue)
 				countLargerValues += 1;
-		return countLargerValues;// / (double)maps.size();
+		return countLargerValues==requiredCandidates?1:0;
 	}
 
 }

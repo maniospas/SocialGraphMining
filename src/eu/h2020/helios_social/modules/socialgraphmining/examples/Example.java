@@ -19,6 +19,9 @@ import eu.h2020.helios_social.modules.socialgraphmining.heuristics.DifferenceMin
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.ProbabilityMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.RepeatAndReplyMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.Accumulate;
+import eu.h2020.helios_social.modules.socialgraphmining.measures.Average;
+import eu.h2020.helios_social.modules.socialgraphmining.measures.DiscoveryExactRank;
+import eu.h2020.helios_social.modules.socialgraphmining.measures.DiscoveryRank;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.HitRate;
 
 public class Example {
@@ -37,13 +40,12 @@ public class Example {
 			this.miner = miner;
 			miner.setActiveMiner("gnn");*/
 			SocialGraphMiner repeatAndReply = new RepeatAndReplyMiner(contextualEgoNetwork);
-			this.miner = new DifferenceMiner(
-					//repeatAndReply,
-					//new ProbabilityMiner(contextualEgoNetwork),
-					     (new GNNMiner(contextualEgoNetwork)).setRegularizationAbsorbsion(0).setLSTMDepth(0)
-					     	.setTrainingExampleDegradation(0.5).setTrainingExampleRemovalThreshold(0.01).setDeniability(0, 0)
-					     	.setTrainingExamplePropagation(false),
-						 repeatAndReply, 1);
+			GNNMiner gnnMiner = new GNNMiner(contextualEgoNetwork).setRegularizationAbsorbsion(0).setLSTMDepth(0)
+				     	.setTrainingExampleDegradation(0.5).setTrainingExampleRemovalThreshold(0.01).setDeniability(0, 0)
+				     	//.setRegularizationWeight(.1)
+				     	.setTrainingExamplePropagation(false);
+			this.miner = new DifferenceMiner(gnnMiner, repeatAndReply, 1);
+			//this.miner = repeatAndReply;
 		}
 		public String getName() {
 			return miner.getContextualEgoNetwork().getEgo().getId();
@@ -89,8 +91,8 @@ public class Example {
 		HashMap<String, Device> devices = new HashMap<String, Device>();
 		BufferedReader edgeReader = new BufferedReader(new FileReader(new File("datasets/ia-enron-email-dynamic.edges")));
 		String line = null;
-		Measure measure = new Accumulate(new HitRate(3, 6));
-		//Measure measure = new Accumulate(new DiscoveryRank(3));
+		Measure measure = new Average(new HitRate(3, 12));
+		//Measure measure = new Average(new DiscoveryExactRank(1));
 		String result = "";
 		int currentInteraction = 0;
 		while((line=edgeReader.readLine())!=null) {
@@ -114,13 +116,13 @@ public class Example {
 				System.out.println("#"+currentInteraction+": "+evaluation);
 			if(currentInteraction%100==0)
 				result += ","+evaluation;
-			if(currentInteraction%10000==0)
-				System.out.println("["+result.substring(1)+"];\n");
+			//if(currentInteraction%10000==0)
+			//	System.out.println("["+result.substring(1)+"];\n");
 			devices.get(u).send(devices.get(v));
 			currentInteraction++;
 		}
 		edgeReader.close();
 		result = "["+result.substring(1)+"];\n";
-		System.out.print(result);
+		//System.out.print(result);
 	}
 }

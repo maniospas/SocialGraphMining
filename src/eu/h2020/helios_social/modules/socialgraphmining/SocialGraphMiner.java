@@ -61,7 +61,7 @@ public abstract class SocialGraphMiner {
      * @param interaction The new interaction the user receives expressed in terms of the contextual ego network
      * @return A String serialization of model parameters.
      */
-    public String getModelParameters(Interaction interaction) {
+    public final String getModelParameters(Interaction interaction) {
     	return getContextualEgoNetwork().getSerializer().serializeToString(getModelParametersAsMap(interaction));
     }
     /**

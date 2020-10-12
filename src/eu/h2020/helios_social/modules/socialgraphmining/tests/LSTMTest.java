@@ -66,8 +66,6 @@ public class LSTMTest {
 	}
 	
 	
-	
-
 	@Test
 	public void LSTMShouldLearnVectorSeries() {
 		Utils.development = true;

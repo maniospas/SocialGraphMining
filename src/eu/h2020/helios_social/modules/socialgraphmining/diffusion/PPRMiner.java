@@ -37,14 +37,14 @@ public class PPRMiner extends SocialGraphMiner {
 		
 	}
 
-	@Override
+	/*@Override
 	public String getModelParameters(Interaction interaction) {
 		Context context = interaction==null?getContextualEgoNetwork().getCurrentContext():interaction.getEdge().getContext();
 		if(context==null) 
 			return Utils.error("Could not find given context", null);
 		Node egoNode = context.getContextualEgoNetwork().getEgo();
 		return egoNode.getOrCreateInstance(GNNNodeData.class).getEmbedding().toString();
-	}
+	}*/
 
 	@Override
 	public double predictNewInteraction(Context context, Node destinationNode) {

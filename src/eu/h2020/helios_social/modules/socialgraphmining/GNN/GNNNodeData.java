@@ -145,5 +145,6 @@ public class GNNNodeData {
 		embedding = embedding
 						.add(regularization.subtract(embedding).selfMultiply(regularizationWeight*learningRate))
 						.selfAdd(derivative.multiply(-learningRate));
+						//.setToNormalized();
 	}
 };

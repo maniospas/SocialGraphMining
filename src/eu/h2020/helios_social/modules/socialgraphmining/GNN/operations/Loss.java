@@ -10,27 +10,30 @@ import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 public class Loss {
 	
 	/**
-	 * The tanh activation (exp(x)-exp(-x))/(exp(x)+exp(-x))
-	 * @param x  The activation of the tanh function.
-	 * @return The tanh value.
-	 */
-	public static double tanh(double x) {
-		return (1-Math.exp(-2*x))/(1+Math.exp(-2*x));
-	}
-	
-	/**
 	 * The sigmoid function 1/(1+exp(-x)).
 	 * @param x The activation of the sigmoid function.
 	 * @return The sigmoid value.
+	 * @see #sigmoid(Tensor)
 	 */
 	public static double sigmoid(double x) {
 		return 1./(1+Math.exp(-x));
 	}
 	
 	/**
+	 * The tanh activation (exp(x)-exp(-x))/(exp(x)+exp(-x))
+	 * @param x  The activation of the tanh function.
+	 * @return The tanh value.
+	 * @see #tanh(Tensor)
+	 */
+	public static double tanh(double x) {
+		return (1-Math.exp(-2*x))/(1+Math.exp(-2*x));
+	}
+	
+	/**
 	 * The derivative of the {@link #sigmoid(double)} function.
 	 * @param x The activation of the sigmoid function.
 	 * @return The sigmoid derivative's value.
+	 * @see #sigmoidDerivative(Tensor)
 	 */
 	public static double sigmoidDerivative(double x) {
 		double sigma = sigmoid(x);
@@ -40,7 +43,8 @@ public class Loss {
 	/**
 	 * The derivative of the {@link #tanh(double)} function.
 	 * @param x The activation of the tanh function.
-	 * @return The tanh derivative's value..
+	 * @return The tanh derivative's value.
+	 * @see #sigmoidDerivative(Tensor)
 	 */
 	public static double tanhDerivative(double x) {
 		double tanhValue = tanh(x);
@@ -107,21 +111,35 @@ public class Loss {
 	}
 	
 
-	
+	/**
+	 * Applies {@link #sigmoid(double)} element-by-element.
+	 * @param x  The activation tensor of the sigmoid function.
+	 * @return The tensor of sigmoid values.
+	 */
 	public static Tensor sigmoid(Tensor x) {
 		Tensor ret = x.zeroCopy();
 		for(int i=0;i<x.size();i++)
 			ret.put(i, sigmoid(x.get(i)));
 		return ret;
 	}
-	
+
+	/**
+	 * Applies {@link #tanh(double)} element-by-element.
+	 * @param x  The activation tensor of the tanh function.
+	 * @return The tensor of tanh values.
+	 */
 	public static Tensor tanh(Tensor x) {
 		Tensor ret = x.zeroCopy();
 		for(int i=0;i<x.size();i++)
 			ret.put(i, tanh(x.get(i)));
 		return ret;
 	}
-	
+
+	/**
+	 * Applies {@link #sigmoidDerivative(double)} function.
+	 * @param x The activation tensor of the sigmoid function.
+	 * @return The tensor of sigmoid derivative values.
+	 */
 	public static Tensor sigmoidDerivative(Tensor x) {
 		Tensor ret = x.zeroCopy();
 		for(int i=0;i<x.size();i++)
@@ -129,6 +147,11 @@ public class Loss {
 		return ret;
 	}
 
+	/**
+	 * Applies {@link #tanhDerivative(double)} function.
+	 * @param x The activation tensor of the tanh function.
+	 * @return The tensor of tanh derivative values.
+	 */
 	public static Tensor tanhDerivative(Tensor x) {
 		Tensor ret = x.zeroCopy();
 		for(int i=0;i<x.size();i++)

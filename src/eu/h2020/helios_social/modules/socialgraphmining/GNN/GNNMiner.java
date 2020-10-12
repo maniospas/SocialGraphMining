@@ -44,6 +44,8 @@ public class GNNMiner extends SocialGraphMiner {
 	private boolean secondOrderProximity = false;
 	private int LSTMdepth = 0;
 	private static HashMap<String, Tensor> globalEmbeddingRegistry = new HashMap<String, Tensor>();//if instantiated by default, it simulates constant federated communication
+	private static HashMap<String, HashMap<String, Tensor>> federatedAveraging = null;//new HashMap<String, HashMap<String, Tensor>>();
+	private static double globalEmbeddingRegistryChance = 1;
 	
 	/**
 	 * Instantiates a {@link GNNMiner} on a given contextual ego network.
@@ -92,6 +94,8 @@ public class GNNMiner extends SocialGraphMiner {
 	/**
 	 * The regularization weight (default 0.1) to apply during training of the GNNMiner.
 	 * This weight ensures that training converges around given areas of the embedding space.
+	 * Value of 0 disables regularization altogether, but does not guarantee convergence 
+	 * (prefer setting setRegularizationAbsorbsion(0) to disable regularization propagation instead).
 	 * @param regularizationWeight The regularization weight to set.
 	 * @return <code>this</code> GNNMiner instance.
 	 * @see GNNNodeData#setRegularizationWeight(double)
@@ -230,7 +234,7 @@ public class GNNMiner extends SocialGraphMiner {
 		if(updateEgoEmbeddingsFromNeighbors!=0)
 			edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().selfMultiply(1-updateEgoEmbeddingsFromNeighbors).selfAdd(((Tensor)params.get("ego_embedding")).multiply(updateEgoEmbeddingsFromNeighbors));
 		
-		if(globalEmbeddingRegistry!=null)
+		if(globalEmbeddingRegistry!=null && Math.random()<globalEmbeddingRegistryChance)
 			for(Node node : interaction.getEdge().getContext().getNodes()) {
 				Tensor embedding = globalEmbeddingRegistry.get(node.getId());
 				if(embedding!=null) {
@@ -301,8 +305,24 @@ public class GNNMiner extends SocialGraphMiner {
 
 			if(globalEmbeddingRegistry!=null) {
 				Node node = edge.getEgo();
-				//for(Node node : interaction.getEdge().getContext().getNodes()) 
-					globalEmbeddingRegistry.put(node.getId(), node.getOrCreateInstance(GNNNodeData.class).getEmbedding());
+				globalEmbeddingRegistry.put(node.getId(), node.getOrCreateInstance(GNNNodeData.class).getEmbedding());
+			}
+			if(federatedAveraging!=null) {
+				for(Node node : edge.getContext().getNodes()) {
+					if(!federatedAveraging.containsKey(node.getId()))
+						federatedAveraging.put(node.getId(), new HashMap<String, Tensor>());
+					federatedAveraging.get(node.getId()).put(edge.getEgo().getId(), node.getOrCreateInstance(GNNNodeData.class).getEmbedding());
+					Tensor average = node.getOrCreateInstance(GNNNodeData.class).getEmbedding().zeroCopy();
+					double weight = 0;
+					for(Tensor embedding : federatedAveraging.get(node.getId()).values()) {
+						weight += 1;
+						average.selfAdd(embedding);
+					}
+					if(weight!=0)
+						average.selfMultiply(1./weight);
+					globalEmbeddingRegistry.put(node.getId(), average);
+					//node.getOrCreateInstance(GNNNodeData.class).forceSetEmbedding(average);
+				}
 			}
 		}
 	}
@@ -346,8 +366,9 @@ public class GNNMiner extends SocialGraphMiner {
 		/*ContextTrainingExampleData trainingExampleData = context.getOrCreateInstance(ContextTrainingExampleData.class);
 		double sumWeights = 0;
 		for(TrainingExample trainingExample : trainingExampleData.getTrainingExampleList())
-			sumWeights += trainingExample.getWeight();*/
-		return 1;//-0.1*Math.exp(-sumWeights);
+			sumWeights += trainingExample.getWeight();
+		return sumWeights;*/
+		return 1;
 	}
 	
 	protected Tensor permute(Tensor tensor, double permutation) {
