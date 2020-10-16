@@ -11,6 +11,7 @@ import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 import eu.h2020.helios_social.core.contextualegonetwork.Node;
 import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
+import eu.h2020.helios_social.modules.socialgraphmining.GNN.communication.EmbeddingExchangeProtocol;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.LSTM;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Loss;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Optimizer;
@@ -43,9 +44,13 @@ public class GNNMiner extends SocialGraphMiner {
 	private boolean enableSpectralAlignment = false;
 	private boolean secondOrderProximity = false;
 	private int LSTMdepth = 0;
+	private EmbeddingExchangeProtocol embeddingExchangeProtocol = null;
+	/*
 	private static HashMap<String, Tensor> globalEmbeddingRegistry = new HashMap<String, Tensor>();//if instantiated by default, it simulates constant federated communication
-	private static HashMap<String, HashMap<String, Tensor>> federatedAveraging = null;//new HashMap<String, HashMap<String, Tensor>>();
-	private static double globalEmbeddingRegistryChance = 1;
+	private static HashMap<String, HashMap<String, Tensor>> federatedAveraging = new HashMap<String, HashMap<String, Tensor>>();
+	private static HashMap<String, HashMap<String, Double>> federatedAveragingTimes = new HashMap<String, HashMap<String, Double>>();
+	private static double current_interaction = 0;
+	private static double globalEmbeddingRegistryChance = 1;*/
 	
 	/**
 	 * Instantiates a {@link GNNMiner} on a given contextual ego network.
@@ -68,8 +73,19 @@ public class GNNMiner extends SocialGraphMiner {
 		return this;
 	}
 	
+	/**
+	 * Makes predictions pass through an LSTM layer that aims to learn the evolution of preferences.
+	 * Set to 0 (default) to disable this behavior
+	 * @param LSTMdepth The number of layers of the LSTM unit.
+	 * @return <code>this</code> GNNMiner instance.
+	 */
 	public GNNMiner setLSTMDepth(int LSTMdepth) {
 		this.LSTMdepth = LSTMdepth;
+		return this;
+	}
+	
+	public GNNMiner setEmbeddingExchangeProtocol(EmbeddingExchangeProtocol embeddingExchangeProtocol) {
+		this.embeddingExchangeProtocol = embeddingExchangeProtocol;
 		return this;
 	}
 	
@@ -231,9 +247,24 @@ public class GNNMiner extends SocialGraphMiner {
 		if(params==null || interaction.getEdge().getEgo()==null || interactionType==InteractionType.SEND)
 			return;
 		Edge edge = interaction.getEdge();
+		Node ego = edge.getEgo();
+		Node alter = edge.getAlter();
+		Context context = edge.getContext();
 		if(updateEgoEmbeddingsFromNeighbors!=0)
-			edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().selfMultiply(1-updateEgoEmbeddingsFromNeighbors).selfAdd(((Tensor)params.get("ego_embedding")).multiply(updateEgoEmbeddingsFromNeighbors));
+			ego.getOrCreateInstance(GNNNodeData.class).getEmbedding()
+					.selfMultiply(1-updateEgoEmbeddingsFromNeighbors)
+					.selfAdd( ((Tensor)params.get("ego_embedding")).multiply(updateEgoEmbeddingsFromNeighbors) );
 		
+		if(embeddingExchangeProtocol!=null)
+			for(Node node : interaction.getEdge().getContext().getNodes())  {
+				Tensor embedding = embeddingExchangeProtocol.requestEmbeddings(ego, node);
+				if(embedding!=null && node!=alter && node!=ego) {
+					node.getOrCreateInstance(GNNNodeData.class).forceSetEmbedding(embedding);
+					node.getOrCreateInstance(GNNNodeData.class).setRegularization(embedding.multiply(regularizationAbsorbsion));
+				}
+			}
+			
+		/*
 		if(globalEmbeddingRegistry!=null && Math.random()<globalEmbeddingRegistryChance)
 			for(Node node : interaction.getEdge().getContext().getNodes()) {
 				Tensor embedding = globalEmbeddingRegistry.get(node.getId());
@@ -242,89 +273,70 @@ public class GNNMiner extends SocialGraphMiner {
 					//node.getOrCreateInstance(GNNNodeData.class).setRegularization(embedding.add(0));//worsens results
 				}
 			}
+		*/
 		
 		Tensor alterTensor = transformLike((Tensor)params.get("ego_embedding"),
 				    ((Tensor)params.get("ego_embedding"))
 				    			.add((Tensor)params.get("alter_embedding")), 
-					edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding()
-								.add(edge.getAlter().getOrCreateInstance(GNNNodeData.class).getEmbedding()));
-		Tensor alterAggregation = transformLike((Tensor)params.get("alter_embedding"),
-			    ((Tensor)params.get("ego_embedding"))
-    							.add((Tensor)params.get("alter_embedding")),  
-					edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding()
+					ego.getOrCreateInstance(GNNNodeData.class).getEmbedding()
 								.add(edge.getAlter().getOrCreateInstance(GNNNodeData.class).getEmbedding()));
 		double receivedConfidence = (double)params.get("confidence");
 		if(params.get("packed_examples")!=null)
 			unpackExamples((String)params.get("packed_examples"), edge.getContext());
 		
-		edge.getEgo().getOrCreateInstance(GNNNodeData.class).setNeighborAggregation(aggregateNeighborEmbeddings(edge.getContext()));
-		//edge.getEgo().getOrCreateInstance(GNNNodeData.class).setRegularization(edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding());
+		alter.getOrCreateInstance(GNNNodeData.class).forceSetEmbedding(alterTensor);
+		alter.getOrCreateInstance(GNNNodeData.class).setRegularization(alterTensor.multiply(regularizationAbsorbsion));
 		
-		//if(globalEmbeddingRegistry==null)
-		edge.getAlter().getOrCreateInstance(GNNNodeData.class).setRegularization(alterTensor.selfMultiply(regularizationAbsorbsion));
-		edge.getAlter().getOrCreateInstance(GNNNodeData.class).setNeighborAggregation(alterAggregation);
-		
-		if(interactionType==InteractionType.RECEIVE_REPLY || interactionType==InteractionType.RECEIVE) {			
-			ContextTrainingExampleData trainingExampleData = edge.getContext().getOrCreateInstance(ContextTrainingExampleData.class);
+		ContextTrainingExampleData trainingExampleData = context.getOrCreateInstance(ContextTrainingExampleData.class);
 
-			if(trainingExampleData.transformToDstEmbedding==null) 
-				trainingExampleData.transformToDstEmbedding = edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().zeroCopy().setToOnes();
-			if(trainingExampleData.transformToSrcEmbedding==null) 
-				trainingExampleData.transformToSrcEmbedding = edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().zeroCopy().setToOnes();
-			if(trainingExampleData.lstm==null) {
-				int embeddingsDims = edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().size();
-				trainingExampleData.lstm = new LSTM(new Optimizer.Regularization(new Optimizer.Adam(1), 1.E-12), embeddingsDims, embeddingsDims);
-			}
-			if(params.get("lstm")!=null)
-				trainingExampleData.lstm.aggregate((LSTM)params.get("lstm"));
-			if(params.get("src_embedding")!=null)
-				trainingExampleData.transformToSrcEmbedding.selfMultiply(0.5).selfAdd(((Tensor)params.get("src_embedding")).multiply(0.5));
-			if(params.get("dst_embedding")!=null)
-				trainingExampleData.transformToDstEmbedding.selfMultiply(0.5).selfAdd(((Tensor)params.get("dst_embedding")).multiply(0.5));
-			
-			
-			if(trainingExampleDegradation!=1)
-				trainingExampleData.degrade(trainingExampleDegradation*receivedConfidence+(1-receivedConfidence), trainingExampleRemovalThreshold);
-			//create the positive training example
-			trainingExampleData.getTrainingExampleList().add(new TrainingExample(edge.getSrc(), edge.getDst(), 1));
-			//create two negative training examples
-			if(edge.getContext().getNodes().size()>2) {
-					Node negativeNode = edge.getSrc();
-					while(negativeNode==edge.getSrc() || negativeNode==edge.getDst())
-						negativeNode = edge.getContext().getNodes().get((int)(Math.random()*edge.getContext().getNodes().size()));
-					trainingExampleData.getTrainingExampleList().add(new TrainingExample(edge.getSrc(), negativeNode, 0));
-					trainingExampleData.getTrainingExampleList().add(new TrainingExample(negativeNode, edge.getDst(), 0));
-				}
-			train(trainingExampleData);
-			for(Node node : edge.getContext().getNodes())
-				node.getOrCreateInstance(GNNNodeData.class).addEmbeddingToHistory();
-			//edge.getEgo().getOrCreateInstance(GNNNodeData.class).addEmbeddingToHistory();
-			//edge.getAlter().getOrCreateInstance(GNNNodeData.class).addEmbeddingToHistory();
-			trainLSTM(trainingExampleData, trainingExampleData.lstm);
-			
-
-			if(globalEmbeddingRegistry!=null) {
-				Node node = edge.getEgo();
-				globalEmbeddingRegistry.put(node.getId(), node.getOrCreateInstance(GNNNodeData.class).getEmbedding());
-			}
-			if(federatedAveraging!=null) {
-				for(Node node : edge.getContext().getNodes()) {
-					if(!federatedAveraging.containsKey(node.getId()))
-						federatedAveraging.put(node.getId(), new HashMap<String, Tensor>());
-					federatedAveraging.get(node.getId()).put(edge.getEgo().getId(), node.getOrCreateInstance(GNNNodeData.class).getEmbedding());
-					Tensor average = node.getOrCreateInstance(GNNNodeData.class).getEmbedding().zeroCopy();
-					double weight = 0;
-					for(Tensor embedding : federatedAveraging.get(node.getId()).values()) {
-						weight += 1;
-						average.selfAdd(embedding);
-					}
-					if(weight!=0)
-						average.selfMultiply(1./weight);
-					globalEmbeddingRegistry.put(node.getId(), average);
-					//node.getOrCreateInstance(GNNNodeData.class).forceSetEmbedding(average);
-				}
-			}
+		if(trainingExampleData.transformToDstEmbedding==null) 
+			trainingExampleData.transformToDstEmbedding = edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().zeroCopy().setToOnes();
+		if(trainingExampleData.transformToSrcEmbedding==null) 
+			trainingExampleData.transformToSrcEmbedding = edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().zeroCopy().setToOnes();
+		if(trainingExampleData.lstm==null) {
+			int embeddingsDims = edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().size();
+			trainingExampleData.lstm = new LSTM(new Optimizer.Regularization(new Optimizer.Adam(1), 1.E-12), embeddingsDims, embeddingsDims);
 		}
+		if(params.get("lstm") != null)
+			trainingExampleData.lstm.aggregate((LSTM)params.get("lstm"));
+		if(params.get("src_embedding") != null)
+			trainingExampleData.transformToSrcEmbedding.selfMultiply(0.5).selfAdd(((Tensor)params.get("src_embedding")).multiply(0.5));
+		if(params.get("dst_embedding") != null)
+			trainingExampleData.transformToDstEmbedding.selfMultiply(0.5).selfAdd(((Tensor)params.get("dst_embedding")).multiply(0.5));
+		
+		if(trainingExampleDegradation!=1)
+			trainingExampleData.degrade(trainingExampleDegradation*receivedConfidence+(1-receivedConfidence), trainingExampleRemovalThreshold);
+		
+		// create the positive training example
+		trainingExampleData.getTrainingExampleList().add(new TrainingExample(edge.getSrc(), edge.getDst(), 1));
+		// create two negative training examples
+		if(context.getNodes().size()>2) {
+				Node negativeNode = ego;
+				ArrayList<Node> nodes = new ArrayList<Node>(); 
+				/*if(globalEmbeddingRegistry!=null) {
+					for(String nodeId : globalEmbeddingRegistry.keySet())
+						if(!edge.getContext().getNodes().contains(edge.getContextualEgoNetwork().getOrCreateNode(nodeId, null)))
+							nodes.add(edge.getContextualEgoNetwork().getOrCreateNode(nodeId, null));
+				}
+				else*/
+				nodes = edge.getContext().getNodes();
+				while(negativeNode==ego || negativeNode==alter) 
+					negativeNode = nodes.get((int)(Math.random()*nodes.size()));
+				trainingExampleData.getTrainingExampleList().add(new TrainingExample(edge.getSrc(), negativeNode, 0));
+				trainingExampleData.getTrainingExampleList().add(new TrainingExample(negativeNode, edge.getDst(), 0));
+			}
+		train(trainingExampleData);
+		
+		// send parameters to embedding exchange protocol
+		if(embeddingExchangeProtocol!=null)
+			for(Node node : context.getNodes()) 
+				embeddingExchangeProtocol.registerEmbeddings(ego, node, node.getOrCreateInstance(GNNNodeData.class).getEmbedding());
+	
+		// train LSTM (carefull to do this after embedding exhanges to not affect which parameters are exchanges)
+		for(Node node : context.getNodes())
+			node.getOrCreateInstance(GNNNodeData.class).addEmbeddingToHistory();
+		trainLSTM(trainingExampleData, trainingExampleData.lstm);
+		
 	}
 	
 	protected Tensor aggregateNeighborEmbeddings(Context context) {
@@ -469,7 +481,6 @@ public class GNNMiner extends SocialGraphMiner {
 		double previousLoss = -1;
 		for(int epoch=0;epoch<maxEpoch;epoch++) {
 			double loss = trainEpoch(trainingExampleData, learningRate);
-			//System.out.println("Epoch " +epoch+"\t Loss "+ loss);
 			learningRate *= this.learningRateDegradation;
 			if(Math.abs(previousLoss-loss)<convergenceRelativeLoss*loss)
 				break;

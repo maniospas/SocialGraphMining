@@ -110,6 +110,16 @@ public class Tensor {
 		return new Tensor(values.length);
 	}
 	/**
+	 * Creates a {@link #zeroCopy()} and transfers to it element values.
+	 * @return a copy of the Tensor with the same size and contents
+	 */
+	public final Tensor copy() {
+		Tensor res = zeroCopy();
+		for(int i=0;i<values.length;i++)
+			res.put(i, get(i));
+		return res;
+	}
+	/**
 	 * @param tensor The tensor to add with
 	 * @return a new Tensor that stores the outcome of addition
 	 */

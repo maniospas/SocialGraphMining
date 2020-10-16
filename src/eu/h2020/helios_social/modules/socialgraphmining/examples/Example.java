@@ -14,14 +14,11 @@ import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 import eu.h2020.helios_social.modules.socialgraphmining.Measure;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNMiner;
+import eu.h2020.helios_social.modules.socialgraphmining.GNN.communication.UncertainAvailabilitySimulation;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.InteractionType;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.DifferenceMiner;
-import eu.h2020.helios_social.modules.socialgraphmining.heuristics.ProbabilityMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.RepeatAndReplyMiner;
-import eu.h2020.helios_social.modules.socialgraphmining.measures.Accumulate;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.Average;
-import eu.h2020.helios_social.modules.socialgraphmining.measures.DiscoveryExactRank;
-import eu.h2020.helios_social.modules.socialgraphmining.measures.DiscoveryRank;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.HitRate;
 
 public class Example {
@@ -40,10 +37,15 @@ public class Example {
 			this.miner = miner;
 			miner.setActiveMiner("gnn");*/
 			SocialGraphMiner repeatAndReply = new RepeatAndReplyMiner(contextualEgoNetwork);
-			GNNMiner gnnMiner = new GNNMiner(contextualEgoNetwork).setRegularizationAbsorbsion(0).setLSTMDepth(0)
-				     	.setTrainingExampleDegradation(0.5).setTrainingExampleRemovalThreshold(0.01).setDeniability(0, 0)
-				     	//.setRegularizationWeight(.1)
-				     	.setTrainingExamplePropagation(false);
+			GNNMiner gnnMiner = new GNNMiner(contextualEgoNetwork)
+					//.setEmbeddingExchangeProtocol(new CentralizedFederatedAveragingSimulation())
+					.setEmbeddingExchangeProtocol(new UncertainAvailabilitySimulation(1))
+					.setRegularizationAbsorbsion(0)
+					.setMinTrainingRelativeLoss(0.0001)
+					.setLSTMDepth(15)
+				    .setTrainingExampleDegradation(0.5)
+				    .setTrainingExampleRemovalThreshold(0.01)
+				    .setDeniability(0, 0);
 			this.miner = new DifferenceMiner(gnnMiner, repeatAndReply, 1);
 			//this.miner = repeatAndReply;
 		}
@@ -112,6 +114,8 @@ public class Example {
 			double evaluation = measure.evaluateSend(devices.get(u).miner,
 					devices.get(u).miner.getContextualEgoNetwork().getCurrentContext(),
 					devices.get(u).miner.getContextualEgoNetwork().getOrCreateNode(v, null));
+			if(currentInteraction==14000)
+				break;
 			if(currentInteraction%1000==0)
 				System.out.println("#"+currentInteraction+": "+evaluation);
 			if(currentInteraction%100==0)
