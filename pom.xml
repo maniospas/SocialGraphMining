@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>SocialGraphMining</groupId>
   <artifactId>SocialGraphMining</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.${BUILD_NUMBER}</version>
   <repositories>
 	<repository>
 	    <id>jitpack.io</id>
@@ -23,6 +23,7 @@
   </dependency>
   </dependencies>
   <build>
+    <sourceDirectory>src</sourceDirectory>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
