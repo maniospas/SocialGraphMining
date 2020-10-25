@@ -14,6 +14,7 @@ import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 import eu.h2020.helios_social.modules.socialgraphmining.Measure;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNMiner;
+import eu.h2020.helios_social.modules.socialgraphmining.GNN.communication.CentralizedFederatedAveragingSimulation;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.communication.UncertainAvailabilitySimulation;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.InteractionType;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.DifferenceMiner;
@@ -39,10 +40,10 @@ public class Example {
 			SocialGraphMiner repeatAndReply = new RepeatAndReplyMiner(contextualEgoNetwork);
 			GNNMiner gnnMiner = new GNNMiner(contextualEgoNetwork)
 					//.setEmbeddingExchangeProtocol(new CentralizedFederatedAveragingSimulation())
-					.setEmbeddingExchangeProtocol(new UncertainAvailabilitySimulation(1))
-					.setRegularizationAbsorbsion(0)
+					.setEmbeddingExchangeProtocol(new UncertainAvailabilitySimulation(0))
+					.setRegularizationAbsorbsion(1)
 					.setMinTrainingRelativeLoss(0.0001)
-					.setLSTMDepth(15)
+					//.setLSTMDepth(15)
 				    .setTrainingExampleDegradation(0.5)
 				    .setTrainingExampleRemovalThreshold(0.01)
 				    .setDeniability(0, 0);
@@ -91,18 +92,33 @@ public class Example {
 	public static void main(String[] args) throws Exception {
 		Utils.development = false;
 		HashMap<String, Device> devices = new HashMap<String, Device>();
-		BufferedReader edgeReader = new BufferedReader(new FileReader(new File("datasets/ia-enron-email-dynamic.edges")));
+		BufferedReader edgeReader = new BufferedReader(new FileReader(new File("datasets/fb-wosn-friends.edges")));
 		String line = null;
-		Measure measure = new Average(new HitRate(3, 12));
-		//Measure measure = new Average(new DiscoveryExactRank(1));
-		String result = "";
-		int currentInteraction = 0;
+		ArrayList<String> interactions = new ArrayList<String>();
+		ArrayList<Double> timestamps = new ArrayList<Double>();
 		while((line=edgeReader.readLine())!=null) {
 			if(line.startsWith("%") || line.startsWith("#") || line.isEmpty())
 				continue;
 			String[] splt = line.split(" ");
 			if(splt.length<3)
 				continue;
+			String time = splt[3];
+			if(time.equals("0"))
+				continue;
+			interactions.add(splt[0]+" "+splt[1]+" "+time);
+			timestamps.add(Double.parseDouble(time));
+		}
+		
+		
+		
+		
+		
+		Measure measure = new Average(new HitRate(3, 12));
+		//Measure measure = new Average(new DiscoveryExactRank(1));
+		String result = "";
+		int currentInteraction = 0;
+		for(int i : eu.h2020.helios_social.modules.socialgraphmining.GNN.operations.Sort.sortedIndexes(timestamps)) {
+			String[] splt = interactions.get(i).split(" ");
 			String u = splt[0];
 			String v = splt[1];
 			if(u.equals(v))

@@ -244,18 +244,18 @@ public class GNNMiner extends SocialGraphMiner {
 	
 	@Override
 	public synchronized void newInteractionFromMap(Interaction interaction, SocialGraphMinerParameters params, InteractionType interactionType) {
-		if(params==null || interaction.getEdge().getEgo()==null || interactionType==InteractionType.SEND)
+		if(interaction.getEdge().getEgo()==null || interactionType==InteractionType.SEND)
 			return;
 		Edge edge = interaction.getEdge();
 		Node ego = edge.getEgo();
 		Node alter = edge.getAlter();
 		Context context = edge.getContext();
-		if(updateEgoEmbeddingsFromNeighbors!=0)
+		if(updateEgoEmbeddingsFromNeighbors!=0 && params!=null)
 			ego.getOrCreateInstance(GNNNodeData.class).getEmbedding()
 					.selfMultiply(1-updateEgoEmbeddingsFromNeighbors)
 					.selfAdd( ((Tensor)params.get("ego_embedding")).multiply(updateEgoEmbeddingsFromNeighbors) );
 		
-		if(embeddingExchangeProtocol!=null)
+		if(embeddingExchangeProtocol!=null && params!=null)
 			for(Node node : interaction.getEdge().getContext().getNodes())  {
 				Tensor embedding = embeddingExchangeProtocol.requestEmbeddings(ego, node);
 				if(embedding!=null && node!=alter && node!=ego) {
@@ -275,37 +275,39 @@ public class GNNMiner extends SocialGraphMiner {
 			}
 		*/
 		
-		Tensor alterTensor = transformLike((Tensor)params.get("ego_embedding"),
-				    ((Tensor)params.get("ego_embedding"))
-				    			.add((Tensor)params.get("alter_embedding")), 
-					ego.getOrCreateInstance(GNNNodeData.class).getEmbedding()
-								.add(edge.getAlter().getOrCreateInstance(GNNNodeData.class).getEmbedding()));
-		double receivedConfidence = (double)params.get("confidence");
-		if(params.get("packed_examples")!=null)
-			unpackExamples((String)params.get("packed_examples"), edge.getContext());
-		
-		alter.getOrCreateInstance(GNNNodeData.class).forceSetEmbedding(alterTensor);
-		alter.getOrCreateInstance(GNNNodeData.class).setRegularization(alterTensor.multiply(regularizationAbsorbsion));
+		if(params!=null) {
+			Tensor alterTensor = transformLike((Tensor)params.get("ego_embedding"),
+					    ((Tensor)params.get("ego_embedding"))
+					    			.add((Tensor)params.get("alter_embedding")), 
+						ego.getOrCreateInstance(GNNNodeData.class).getEmbedding()
+									.add(edge.getAlter().getOrCreateInstance(GNNNodeData.class).getEmbedding()));
+			double receivedConfidence = (double)params.get("confidence");
+			if(params.get("packed_examples")!=null)
+				unpackExamples((String)params.get("packed_examples"), edge.getContext());
+			
+			alter.getOrCreateInstance(GNNNodeData.class).forceSetEmbedding(alterTensor);
+			alter.getOrCreateInstance(GNNNodeData.class).setRegularization(alterTensor.multiply(regularizationAbsorbsion));
+		}
 		
 		ContextTrainingExampleData trainingExampleData = context.getOrCreateInstance(ContextTrainingExampleData.class);
 
 		if(trainingExampleData.transformToDstEmbedding==null) 
-			trainingExampleData.transformToDstEmbedding = edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().zeroCopy().setToOnes();
+			trainingExampleData.transformToDstEmbedding = edge.getDst().getOrCreateInstance(GNNNodeData.class).getEmbedding().zeroCopy().setToOnes();
 		if(trainingExampleData.transformToSrcEmbedding==null) 
-			trainingExampleData.transformToSrcEmbedding = edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().zeroCopy().setToOnes();
+			trainingExampleData.transformToSrcEmbedding = edge.getSrc().getOrCreateInstance(GNNNodeData.class).getEmbedding().zeroCopy().setToOnes();
 		if(trainingExampleData.lstm==null) {
 			int embeddingsDims = edge.getEgo().getOrCreateInstance(GNNNodeData.class).getEmbedding().size();
 			trainingExampleData.lstm = new LSTM(new Optimizer.Regularization(new Optimizer.Adam(1), 1.E-12), embeddingsDims, embeddingsDims);
 		}
-		if(params.get("lstm") != null)
+		if(params.get("lstm") != null && params!=null)
 			trainingExampleData.lstm.aggregate((LSTM)params.get("lstm"));
-		if(params.get("src_embedding") != null)
+		if(params.get("src_embedding") != null && params!=null)
 			trainingExampleData.transformToSrcEmbedding.selfMultiply(0.5).selfAdd(((Tensor)params.get("src_embedding")).multiply(0.5));
-		if(params.get("dst_embedding") != null)
+		if(params.get("dst_embedding") != null && params!=null)
 			trainingExampleData.transformToDstEmbedding.selfMultiply(0.5).selfAdd(((Tensor)params.get("dst_embedding")).multiply(0.5));
 		
 		if(trainingExampleDegradation!=1)
-			trainingExampleData.degrade(trainingExampleDegradation*receivedConfidence+(1-receivedConfidence), trainingExampleRemovalThreshold);
+			trainingExampleData.degrade(trainingExampleDegradation, trainingExampleRemovalThreshold);
 		
 		// create the positive training example
 		trainingExampleData.getTrainingExampleList().add(new TrainingExample(edge.getSrc(), edge.getDst(), 1));
@@ -320,7 +322,7 @@ public class GNNMiner extends SocialGraphMiner {
 				}
 				else*/
 				nodes = edge.getContext().getNodes();
-				while(negativeNode==ego || negativeNode==alter) 
+				while(negativeNode==edge.getSrc() || negativeNode==edge.getDst()) 
 					negativeNode = nodes.get((int)(Math.random()*nodes.size()));
 				trainingExampleData.getTrainingExampleList().add(new TrainingExample(edge.getSrc(), negativeNode, 0));
 				trainingExampleData.getTrainingExampleList().add(new TrainingExample(negativeNode, edge.getDst(), 0));
@@ -598,14 +600,16 @@ public class GNNMiner extends SocialGraphMiner {
 		return loss;
 	}
 
-	@Override
-	public double predictNewInteraction(Context context, Node destinationNode) {
-		if(destinationNode==null)
+	public double predictNewInteraction(Context context, Node u, Node v) {
+		if(context==null || u==null || v==null)
 			Utils.error(new IllegalArgumentException());
 		ContextTrainingExampleData trainingExampleData = context.getOrCreateInstance(ContextTrainingExampleData.class);
 		
-		Node u = destinationNode.getContextualEgoNetwork().getEgo();
-		Node v = destinationNode;
+		if(trainingExampleData.transformToDstEmbedding==null) 
+			trainingExampleData.transformToDstEmbedding = u.getOrCreateInstance(GNNNodeData.class).getEmbedding().zeroCopy().setToOnes();
+		if(trainingExampleData.transformToSrcEmbedding==null) 
+			trainingExampleData.transformToSrcEmbedding = v.getOrCreateInstance(GNNNodeData.class).getEmbedding().zeroCopy().setToOnes();
+		
 		
 		Tensor embedding_u = u.getOrCreateInstance(GNNNodeData.class).getEmbedding().multiply(trainingExampleData.transformToSrcEmbedding);
 		Tensor embedding_v = v.getOrCreateInstance(GNNNodeData.class).getEmbedding().multiply(trainingExampleData.transformToDstEmbedding);
@@ -631,5 +635,13 @@ public class GNNMiner extends SocialGraphMiner {
 		double secondOrderActivation = secondOrderProximity?Loss.sigmoid(embedding_u.dot(secondOrder_v))*Loss.sigmoid(embedding_v.dot(secondOrder_u)):1;
 		
 		return firstOrderActivation*secondOrderActivation;
+	}
+	
+	@Override
+	public double predictNewInteraction(Context context, Node destinationNode) {
+		Node u = destinationNode.getContextualEgoNetwork().getEgo();
+		Node v = destinationNode;
+		return predictNewInteraction(context, u, v);
+		
 	}
 }

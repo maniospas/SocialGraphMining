@@ -23,7 +23,7 @@ public class CentralizedFederatedAveragingSimulation extends EmbeddingExchangePr
 		for(String estimatorId : estimations.get(alterId).keySet()) {
 			if(sum==null)
 				sum = estimations.get(alterId).get(estimatorId).zeroCopy();
-			double weight = 1;//Math.exp(times.get(alterId).get(estimatorId)-lastTimes.get(alterId));
+			double weight = 1;//Math.exp(.001*(times.get(alterId).get(estimatorId)-lastTimes.get(alterId)));
 			sum.selfAdd(estimations.get(alterId).get(estimatorId).multiply(weight));
 			totalWeight += weight;
 		}
