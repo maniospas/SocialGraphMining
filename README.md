@@ -11,7 +11,7 @@ basis and can facilitate various objectives.
 This module depends on [eu.h2020.helios_social.core.contextualegonetwork](https://github.com/helios-h2020/h.core-SocialEgoNetwork).
 
 ### Jar File installation
-This project can be downloaded as a [jar file](https://github.com/helios-h2020/h.extension-SocialGraphMining/blob/master/jar/h.extension-SocialGraphMining%201.0.0.jar), which can be added on a
+This project can be downloaded as a [jar file](https://github.com/helios-h2020/h.extension-SocialGraphMining/blob/master/jar/h.extension-SocialGraphMining1.0.3.jar), which can be added on a
 Java project's dependencies. This requires also adding the Jar of the ContextualEgoNetwork library.
 
 ### Gradle Installation
@@ -30,7 +30,7 @@ Then add the dependency:
 
 ```
 dependencies {
-        implementation 'com.github.helios-h2020:h.extension-SocialGraphMining:1.0.0'
+        implementation 'com.github.helios-h2020:h.extension-SocialGraphMining:1.0.3'
 }
 ```
 
@@ -52,7 +52,7 @@ Then add the dependency:
 <dependency>
     <groupId>com.github.helios-h2020</groupId>
     <artifactId>h.extension-SocialGraphMining</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.3</version>
 </dependency>
 ```
 
