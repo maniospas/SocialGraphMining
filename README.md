@@ -60,7 +60,7 @@ Then add the dependency:
 Here we detail how to develop applications using this module's graph API to provide social graph recommendation capabilities.
 
 ### Instantiating the graph miner
-Setting up graph mining capabilities start from a contextual ego network instance. If such an instance is not available,
+Graph mining capabilities start from a contextual ego network instance. If such an instance is not available,
 it can be created when the application starts using the following code:
 ```java
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
@@ -88,20 +88,20 @@ miner.createMiner("repeat", RepeatAndReplyMiner.class);
 miner.createMiner("gnn", GNNMiner.class).setDeniability(0.1, 0.1); //also apply 10% differential privacy and plausible deniability
 miner.setActiveMiner("gnn");
 ```
-Alternating between the created miner can be done by referencing their given names through the commands
-`miner.setActiveMiner("repeat");` and `miner.setActiveMiner("gnn");` respectively. This alteration changes only which of the
-two miners are used for recommendation (see below) but simultaneously trains all of them after the switchable miner has been
-notified of a new interactionr. In the above example we set the GNN miner as the type of miner the application starts recommending
+Alternating between the above created miners can be done through their names through the commands
+`miner.setActiveMiner("repeat");` and `miner.setActiveMiner("gnn");` respectively. This alternation changes only which of the
+two miners is used for recommendation (see below) but simultaneously trains all of them whenever the switchable miner is
+notified of new interactions. In the above example we set the GNN miner as the type of miner the application starts recommending
 with.
 
 It must be noted that, after instantiating a graph miner, such as the switchable miner, it needs to be constantly notified about
 user interactions and somes exchange parameters with other devices (see below).
 
 ### Recommending interactions in the current context
-Before explaining how to train the miners, it must be pointed out that training and predictions change as user switch contexts.
-In HELIOS, multiple contexts (e.g. home, work) may be defined by each users. In case where context switching is a not a
-necessity in an application, a generic purpose context can be created and set up as the current context (i.e. so as to be easily
-retrievable). We remind that doing so using the contextual ego network management library can be achieved through the following code:
+Before explaining how to train the miners, it must be pointed out that predictions change as users switch contexts.
+In HELIOS, multiple contexts (e.g. home, work) may be defined by each user. In case where context switching is a not a
+necessity in an application, a generic-purpose context can be created and set up as the current one.
+Doing this with the contextual ego network management library can be achieved through the following code:
 
 ```java
 contextualEgoNetwork.setCurrent(contextualEgoNetwork.getOrCreateContext("default"));
