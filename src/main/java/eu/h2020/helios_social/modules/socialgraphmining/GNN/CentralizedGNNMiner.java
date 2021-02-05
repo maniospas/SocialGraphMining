@@ -32,7 +32,7 @@ public class CentralizedGNNMiner extends SocialGraphMiner {
 	}
 	@Override
 	public void newInteractionParameters(Interaction interaction, SocialGraphMinerParameters neighborModelParameters, InteractionType interactionType) {
-		if(interactionType!=interactionType.SEND)
+		if(interactionType!=InteractionType.SEND)
 			return;
 		gnnMiner.newInteractionParameters(contextualEgoNetwork.getOrCreateContext("test_context")
 				.addEdge(

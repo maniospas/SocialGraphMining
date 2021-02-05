@@ -32,7 +32,7 @@ public class GNNMiner extends SocialGraphMiner {
 	private double trainingExampleDegradation = 0.5;
 	private double trainingExampleRemovalThreshold = 0.1;
 	private double egoDeniability = 0;
-	private double neighborDeniability = 0;
+	//private double neighborDeniability = 0;
 	private double incommingEdgeLearningRateMultiplier = 0;
 	private double outgoingEdgeLearningRateMultiplier = 0;
 	private double updateEgoEmbeddingsFromNeighbors = 0;
@@ -185,7 +185,7 @@ public class GNNMiner extends SocialGraphMiner {
 	 */
 	public GNNMiner setDeniability(double plausibleDeniability, double differentialPrivacy) {
 		this.egoDeniability = plausibleDeniability;
-		this.neighborDeniability = differentialPrivacy;
+		//this.neighborDeniability = differentialPrivacy;
 		return this;
 	}
 	

@@ -2,7 +2,6 @@ package eu.h2020.helios_social.modules.socialgraphmining.TF;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map.Entry;
 
 import eu.h2020.helios_social.core.contextualegonetwork.Context;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
@@ -16,11 +15,9 @@ import mklab.JGNN.core.ModelBuilder;
 import mklab.JGNN.core.Matrix;
 import mklab.JGNN.core.Tensor;
 import mklab.JGNN.core.matrix.DenseMatrix;
-import mklab.JGNN.core.matrix.SparseMatrix;
 import mklab.JGNN.core.matrix.SparseSymmetric;
 import mklab.JGNN.core.optimizers.Adam;
 import mklab.JGNN.core.tensor.DenseTensor;
-import mklab.JGNN.core.util.Loss;
 import mklab.JGNN.models.IdConverter;
 
 public class TFMiner extends SocialGraphMiner {

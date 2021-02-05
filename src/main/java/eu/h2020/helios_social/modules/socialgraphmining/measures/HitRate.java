@@ -62,8 +62,8 @@ public class HitRate implements Measure {
 		for(double value : maps.values())
 			if(value >= dstValue && Double.isFinite(value))
 				countLargerValues += 1;
-		//System.out.println(k+" larger ");
-		return countLargerValues<=k?1.:0.;
+		//return countLargerValues<=k?1.:0.;
+		return 1-countLargerValues/(float)maps.size();
 	}
 
 }

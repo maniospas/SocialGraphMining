@@ -52,11 +52,10 @@ public class Example {
 	public static void main(String[] args) throws Exception {
 		Utils.development = false;
 		Dataset dataset = new Datasets.FRIENDS();
-		PeriodicReport measure = new PeriodicReport(new Average(new HitRate(3, 12)), 100);
-		(new TFSimulation())
-		
-			.setLastPredictionToAvoid(2)
-			.setMaxInteractions(20000)
+		PeriodicReport measure = new PeriodicReport(new Average(new HitRate(1)), 1000);
+		(new RepeatSimulation())
+			.setLastPredictionToAvoid(1)
+			//.setMaxInteractions(20000)
 			.run(dataset, measure);
 	}
 }
