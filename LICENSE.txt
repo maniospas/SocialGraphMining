@@ -176,7 +176,7 @@
 
    END OF TERMS AND CONDITIONS
 
-   Copyright 2013-2018 Docker, Inc.
+   Copyright 2019-2021 Emmanouil Krasanakis, Center for Research and Technology Hellas (CERTH-ITI) 
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
