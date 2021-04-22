@@ -47,13 +47,25 @@ public class PPRMiner extends SocialGraphMiner {
 	 * of {@link #getSmoothedPersonalization()} is forcefully snapped to the personalization vector. Making this
 	 * depend on the norm helps deployment of models.
 	 * @param personalizationAsGroundTruth A boolean value on whether personalization should be considered ground truth.
-	 * @return The miner's instance.
+	 * @return <code>this</code> miner's instance.
 	 */
 	public synchronized PPRMiner setPersonalizationAsGroundTruth(boolean personalizationAsGroundTruth) {
 		this.personalizationAsGroundTruth = personalizationAsGroundTruth;
 		return this;
 	}
 	
+	/**
+	 * Sets the restart probability of the personalized PageRank scheme. Smaller values induce
+	 * broader diffusion of predictions, i.e. many hops away in the social graph. The equivalent
+	 * random walk with restart scheme has average random walk length equal to 1/(restart probability).
+	 * <br>
+	 * Suggested values to experiment with:<br>
+	 * - 0.15 (used in older personalized PageRank papers)
+	 * - 0.10 (default, used by graph neural networks to great success)
+	 * - 0.01 (extremely long walks, suitable to detect communities of high radius from few examples)
+	 * @param restartProbability The restart probability in the range (0,1) (default is 0.1).
+	 * @return <code>this</code> miner's instance.
+	 */
 	public synchronized PPRMiner setRestartProbability(double restartProbability) {
 		if(restartProbability<=0 || restartProbability>=1)
 			Utils.error("Restart probabilty should be in the open range (0,1)");

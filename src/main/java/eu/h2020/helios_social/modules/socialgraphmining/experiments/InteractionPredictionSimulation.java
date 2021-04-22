@@ -14,7 +14,7 @@ import eu.h2020.helios_social.modules.socialgraphmining.measures.HitRate;
 import mklab.JGNN.datasets.Dataset;
 import mklab.JGNN.datasets.Datasets;
 
-public class DecentralizedSimulation {
+public class InteractionPredictionSimulation {
 	
 	public static class GNNSimulation extends Simulation {
 		@Override

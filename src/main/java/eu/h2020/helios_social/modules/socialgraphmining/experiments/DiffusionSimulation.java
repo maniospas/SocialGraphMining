@@ -13,7 +13,7 @@ import mklab.JGNN.datasets.Dataset;
 import mklab.JGNN.datasets.Datasets;
 import mklab.JGNN.models.IdConverter;
 
-public class GNNSimulation {
+public class DiffusionSimulation {
 	private static double fractionOfKnownLabels = 0.1;
 	
 	protected static PPRMiner createMiner(String deviceName, int classificationId) {
