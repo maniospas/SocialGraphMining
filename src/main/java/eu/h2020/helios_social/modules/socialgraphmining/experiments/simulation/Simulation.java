@@ -8,7 +8,7 @@ import eu.h2020.helios_social.core.contextualegonetwork.storage.NoStorage;
 import eu.h2020.helios_social.modules.socialgraphmining.Measure;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.RepeatAndReplyMiner;
-import mklab.JGNN.examples.Dataset;
+import mklab.JGNN.datasets.Dataset;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.DifferenceMiner;
 
 /**

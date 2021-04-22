@@ -17,12 +17,12 @@
   <dependency>
 	  <groupId>eu.h2020.helios_social.core.contextualegonetwork</groupId>
 	  <artifactId>contextualegonetwork</artifactId>
-	  <version>1.0.20</version>
+	  <version>1.0.23</version>
   </dependency>
   <dependency>
 	    <groupId>com.github.maniospas</groupId>
 	    <artifactId>JGNN</artifactId>
-	    <version>5155ef58f8</version>
+	    <version>91c0efdf76</version>
 	</dependency>
   <dependency>
     <groupId>junit</groupId>

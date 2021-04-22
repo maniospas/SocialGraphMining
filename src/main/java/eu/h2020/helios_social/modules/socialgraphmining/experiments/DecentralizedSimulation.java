@@ -11,11 +11,10 @@ import eu.h2020.helios_social.modules.socialgraphmining.heuristics.RandomMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.RepeatAndReplyMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.Average;
 import eu.h2020.helios_social.modules.socialgraphmining.measures.HitRate;
-import mklab.JGNN.examples.Dataset;
-import mklab.JGNN.examples.Datasets;
+import mklab.JGNN.datasets.Dataset;
+import mklab.JGNN.datasets.Datasets;
 
-
-public class Example {
+public class DecentralizedSimulation {
 	
 	public static class GNNSimulation extends Simulation {
 		@Override

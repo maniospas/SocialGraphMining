@@ -34,9 +34,11 @@ public class SwitchableMiner extends SocialGraphMiner {
 	 * alongside all other {@link #newInteraction(Interaction, String, InteractionType)} miners, regardless of whether it
 	 * is set as the currently active miner by this class's respective method or not. Parameters of created miners are
 	 * aggregated in this class through its {@link #getModelParameters(Interaction)} implementation and are de-aggregated at
-	 * the receiving end of the received interaction.
+	 * the receiving end of interactions.
 	 * 
-	 * @param minerName The name to be assigned at the miner
+	 * To manually instantiate a miner, use {@link #registerMiner(String, SocialGraphMiner)} instead.
+	 * 
+	 * @param minerName The name to be assigned at the miner.
 	 * @param minerClass The class of the created miner (should have a constructor with exactly one SocialEgoNetwork argument).
 	 * @param SocialGraphMinerClass The implicitly understood class of the created miner.
 	 * @return The created miner.
@@ -45,7 +47,7 @@ public class SwitchableMiner extends SocialGraphMiner {
 	 */
 	public <SocialGraphMinerClass extends SocialGraphMiner> SocialGraphMinerClass createMiner(String minerName, Class<SocialGraphMinerClass> minerClass) {
 		if(locked)
-			Utils.error("All createMiner() calls should have been performed immediately after initialization");
+			Utils.error("All createMiner() and registerMiner() calls should have been performed immediately after initialization");
 		try {
 			SocialGraphMinerClass miner = minerClass.getConstructor(ContextualEgoNetwork.class).newInstance(getContextualEgoNetwork());
 			if(miners.containsKey(minerName))
@@ -56,6 +58,28 @@ public class SwitchableMiner extends SocialGraphMiner {
 		catch(Exception exception) {
 			return Utils.error(exception, null);
 		}
+	}
+	
+	/**
+	 * Registers a miner instance with the given name (see {@link #createMiner(String, Class)} for details on
+	 * registered miners). The provided miner instance should have the same same {@link #getContextualEgoNetwork()} instance as the SwitchableMiner.
+	 * 
+	 * @param minerName The name to be assigned at the miner.
+	 * @param miner The implicitly understood class of the created miner.
+	 * 
+	 * @see #getMiner(String)
+	 * @see #setActiveMiner(String)
+	 */
+	public void registerMiner(String minerName, SocialGraphMiner miner) {
+		if(locked)
+			Utils.error("All createMiner() and registerMiner() calls should have been performed immediately after initialization");
+		if(miner.getContextualEgoNetwork()!=this.getContextualEgoNetwork())
+			Utils.error("The miner being registered to the SwitchableMiner should reference the same ContextualEgoNetwork");
+		if(miners.containsKey(minerName))
+			Utils.error("Miner name already exists: "+minerName);
+		if(miners.values().contains(miner))
+			Utils.error("Miner already registered (perhaps with a different name)");
+		miners.put(minerName, miner);
 	}
 	
 	/**

@@ -30,7 +30,7 @@ Then add the dependency:
 
 ```
 dependencies {
-        implementation 'com.github.helios-h2020:h.extension-SocialGraphMining:1.0.3'
+        implementation 'com.github.helios-h2020:h.extension-SocialGraphMining:1.0.4'
 }
 ```
 
@@ -52,7 +52,7 @@ Then add the dependency:
 <dependency>
     <groupId>com.github.helios-h2020</groupId>
     <artifactId>h.extension-SocialGraphMining</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
 </dependency>
 ```
 
@@ -166,6 +166,31 @@ ArrayList<Interaction> edgeInteractions = A.contextualEgoNetwork
 Interaction interaction = interactions.get(interactions.size()-1);
 miner.newInteraction(parametersOfB, InteractionType.RECEIVE_REPLY);
 ```
+
+### Diffusing predictions through the decentralized social graph
+The mining module can be used to augment the predictive capabilities of other modules through graph diffusion.
+This is achieved through the `PPRMiner`, which implements a decentralized version of the random walk with restart scheme
+to aggregate predictions across ego network alters with the ego's device predictions. To use this miner, we consider a
+scheme where each device makes its own prediction about its users (e.g. a classification of their interests), where
+predictions are **not** necessarily made for all devices, for instance due to lack of data features. At worst, some 
+device users could have manually classified themselves.
+
+In this setting, we consider that each device encodes its user's information into a *personalization vector*, which is an
+one-hot encoding of their classification label. For example, given that the device's user is assigned to the class
+ *cl=0,1,...,n-1* out of *n* potential classes, this one-hot encoding can be obtained per `personalization = new DenseTensor(n).put(cl,1);` where `DenseTensor` is a data structure to manipulate vectors provided by the JGNN library.  This expression
+ creates a vector of *n* zeros, where a value of *1* is placed on position *cl*. For users with unknown classification labels, the personalization vector comprises only zeros and can be constructed per 
+ `personalization = new DenseTensor(n);`.
+
+Then, in each device, the miner needs to be constructed given a unique name (that differentiates between multiple 
+usages by different modules) the contextual ego network instance to attach information to and the personalization vector
+for the device's user per `pprMiner = new PPRMiner(name, contextualEgoNetwork, personalization)`. The personalization can be updated later on through the `pprMiner.updatePersonalization(personalization);` method.
+To further prevent diffusion to change non-zero (i.e. known) personalizations, the PPRMiner can be made to forcefully
+keep known predictions through `miner.setPersonalizationAsGroundTruth(true);`
+
+As a final note, PPRMiners extend the social graph mining class and hence need to exchange parameters with their
+neighbors given the previous communication scheme. For example usage of the PPRMiner, please refer to the
+simulation code at *eu.h2020.helios_social.modules.socialgraphmining.experiments.DecentralizedSimulation.java*.
+
 
 ## Project Structure
 This project contains the following components:
