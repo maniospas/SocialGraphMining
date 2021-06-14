@@ -8,10 +8,10 @@ basis and can facilitate various objectives.
 
 ## Installation
 [![](https://jitpack.io/v/helios-h2020/h.extension-SocialGraphMining.svg)](https://jitpack.io/#helios-h2020/h.extension-SocialGraphMining)
-This module depends on [eu.h2020.helios_social.core.contextualegonetwork](https://github.com/helios-h2020/h.core-SocialEgoNetwork).
+This module depends on [eu.h2020.helios_social.core.contextualegonetwork](https://githuBob.com/helios-h2020/h.core-SocialEgoNetwork).
 
 ### Jar File installation
-This project can be downloaded as a [jar file](https://github.com/helios-h2020/h.extension-SocialGraphMining/blob/master/jar/h.extension-SocialGraphMining1.0.3.jar), which can be added on a
+This project can be downloaded as a [jar file](https://githuBob.com/helios-h2020/h.extension-SocialGraphMining/blob/master/jar/h.extension-SocialGraphMining1.0.3.jar), which can be added on a
 Java project's dependencies. This requires also adding the Jar of the ContextualEgoNetwork library.
 
 ### Gradle Installation
@@ -30,7 +30,7 @@ Then add the dependency:
 
 ```
 dependencies {
-        implementation 'com.github.helios-h2020:h.extension-SocialGraphMining:1.0.4'
+        implementation 'com.githuBob.helios-h2020:h.extension-SocialGraphMining:1.0.4'
 }
 ```
 
@@ -50,7 +50,7 @@ Then add the dependency:
 
 ```xml
 <dependency>
-    <groupId>com.github.helios-h2020</groupId>
+    <groupId>com.githuBob.helios-h2020</groupId>
     <artifactId>h.extension-SocialGraphMining</artifactId>
     <version>1.0.4</version>
 </dependency>
@@ -61,7 +61,8 @@ Here we detail how to develop applications using this module's graph API to prov
 
 ### Instantiating the graph miner
 Graph mining capabilities start from a contextual ego network instance. If such an instance is not available,
-it can be created when the application starts using the following code:
+it can be created when the application starts with the following code:
+
 ```java
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
     
@@ -69,12 +70,13 @@ String userid = "ego"; // can use any kind of user id for the ego node
 String internalStoragePath = app.getApplicationContext().getDir("egonetwork", MODE_PRIVATE); // an internal storage path in Android devices
 ContextualEgoNetwork contextualEgoNetwork = ContextualEgoNetwork.createOrLoad(internalStoragePath, userid, null);
 ```
+
 The contextual ego network library is used by this module to attach information on the perceived
-social graph structure and can be saved using the command `contextualEgoNetwork.save()`. For a more
-detailed description see the documentation of the library. Only a **singleton** ContextualEgoNetwork instance should be created 
+social graph structure and can be saved with the command `contextualEgoNetwork.save()`. For a more
+detailed description, see the respective documentation Only a **singleton** ContextualEgoNetwork instance should be created 
 in an application and it should be shared with any other modules that potentially depend on it.
 
-Given the contextual ego network instance, we can then set up a switchable miner to be able to alternate between different mining algorithms in runtime (e.g. to change the criteria interaction recommendations are sorted by). Here we will show how to alternate between two types of graph miners: one that re-recommends recent interactions (RepeatAndReplyMiner) and one that uses GNNs to
+Given a contextual ego network instance, it is recommended set up a switchable miner, which holds any number of mining algorithms. Switchable miners can alternate between held miners at runtime, for example to change the criteria interaction recommendations are sorted by. Typically, only a **singleton** switchable miner will be defined per android application. Here we will show how to alternate between two types of graph miners: one that re-recommends recent interactions (RepeatAndReplyMiner) and one that uses GNNs to
 recommend interactions (GNNMiner). Initializing a switchable miner and adding these two types of miners on it can be done with
 the following code:
 
@@ -95,7 +97,7 @@ notified of new interactions. In the above example we set the GNN miner as the t
 with.
 
 It must be noted that, after instantiating a graph miner, such as the switchable miner, it needs to be constantly notified about
-user interactions and somes exchange parameters with other devices (see below).
+user interactions and some exchange parameters with other devices (see below).
 
 ### Recommending interactions in the current context
 Before explaining how to train the miners, it must be pointed out that predictions change as users switch contexts.
@@ -119,52 +121,55 @@ The recommendations are (Node, weight) entries for all nodes in the current cont
 with higher ones indicating stronger recommendation for interacting with the respective node. 
 
 ### Communication scheme
-A requirement for using the social graph mining algorithms is that they need to exchange information when social interactions occur. **Not doing so will considerably worsen the quality of some mining algorithms**, especially those based on GNNs. Our design requires
-only little communication (i.e. three information exchanges) only when the interactions occur and of few parameters (e.g. at worst, expect a 100 double numbers converted to strings).
+A requirement for using the social graph mining algorithms is that they need to exchange information when social interactions occur. **Not doing so will considerably worsen the quality of some mining algorithms**, especially those based on graph diffusion or GNNs. Our design 
+requires little communication (i.e. three information exchanges), only when the interactions occur and of few parameters (e.g. at worst, expect 100 double numbers converted to strings).
+
+:bulb: Switchable miners automatically exchange parameters for all registered miners. As such, the following communication protocol
+needs to be implemented **only** for the switchable miner holding all application miners.
 
 Our algorithms assume that, when the user of a device *A* initiates a social interaction towards the user of a device *B* the following communication steps are followed:
 
 ##### First step (SEND)
-*A* creates an interaction in its instance of the contextual ego network retrieves a set of parameters (parametersOfA) from its miner given that interaction:
+*A* creates an interaction in its instance of the contextual ego network retrieves a set of parameters (parametersOfAlice) from its miner given that interaction:
 ```java
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 
-Interaction interaction = A.contextualEgoNetwork
+Interaction interaction = Alice.contextualEgoNetwork
 				.getCurrentContext()
 				.getOrAddEdge(contextualEgoNetwork.getEgo(), contextualEgoNetwork.getOrCreateNode(nameOfB, null))
 				.addDetectedInteraction(null);
-String parametersOfA = A.miner.getModelParameters(interaction);
+String parametersOfAlice = Alice.miner.getModelParameters(interaction);
 ```
 Then *A* sends to *B* its parameters (e.g. by attaching them on the sent message or immediately after the sent message).
 
 ##### Second step (RECEIVE)
-*B* receives the parameters of *A* (parametersOfA), creates a new interaction on its instance of the contextual ego network, notifies its miner about the receive and creates a new set of parameters (parametersOfB):
+*B* receives the parameters of *A* (parametersOfAlice), creates a new interaction on its instance of the contextual ego network, notifies its miner about the receive and creates a new set of parameters (parametersOfBob):
 ```java
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.InteractionType;
 
-Interaction interaction = B.contextualEgoNetwork
+Interaction interaction = Bob.contextualEgoNetwork
 				.getCurrentContext()
 				.getOrAddEdge(contextualEgoNetwork.getEgo(), contextualEgoNetwork.getOrCreateNode(nameOfA, null))
 				.addDetectedInteraction(null);
-B.miner.newInteraction(interaction, parametersOfA, InteractionType.RECEIVE);
-String parametersOfB = miner.getModelParameters(interaction);
+Bob.miner.newInteraction(interaction, parametersOfAlice, InteractionType.RECEIVE);
+String parametersOfBob = miner.getModelParameters(interaction);
 ```
 Then *B* sends back to *A* its parameters (e.g. by attaching to a receive acknowledgement message).
 
 ##### Third step (RECEIVE_ACK)
-*A* receives the parameters of *B* (parametersOfB), retrieves the interaction these refer to and notifies its miner about the update:
+*Alice* receives the parameters of *Bob* (parametersOfBob), retrieves the interaction these refer to and notifies its miner about the update:
 
 ```java
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.InteractionType;
 
-ArrayList<Interaction> edgeInteractions = A.contextualEgoNetwork
+ArrayList<Interaction> edgeInteractions = Alice.contextualEgoNetwork
 				.getCurrentContext()
-				.getOrAddEdge(A.contextualEgoNetwork.getEgo(), contextualEgoNetwork.getOrCreateNode(nameOfB, null))
+				.getOrAddEdge(Alice.contextualEgoNetwork.getEgo(), contextualEgoNetwork.getOrCreateNode(nameOfB, null))
 				.getInteractions();
 Interaction interaction = interactions.get(interactions.size()-1);
-miner.newInteraction(parametersOfB, InteractionType.RECEIVE_REPLY);
+miner.newInteraction(parametersOfBob, InteractionType.RECEIVE_REPLY);
 ```
 
 ### Diffusing predictions through the decentralized social graph
@@ -175,21 +180,45 @@ scheme where each device makes its own prediction about its users (e.g. a classi
 predictions are **not** necessarily made for all devices, for instance due to lack of data features. At worst, some 
 device users could have manually classified themselves.
 
+##### User personalization vector
 In this setting, we consider that each device encodes its user's information into a *personalization vector*, which is an
 one-hot encoding of their classification label. For example, given that the device's user is assigned to the class
- *cl=0,1,...,n-1* out of *n* potential classes, this one-hot encoding can be obtained per `personalization = new DenseTensor(n).put(cl,1);` where `DenseTensor` is a data structure to manipulate vectors provided by the JGNN library.  This expression
- creates a vector of *n* zeros, where a value of *1* is placed on position *cl*. For users with unknown classification labels, the personalization vector comprises only zeros and can be constructed per 
- `personalization = new DenseTensor(n);`.
-
+ *cl=0,1,...,n-1* out of *n* potential classes, where classes are consecutive integer numbers. That is, the first class
+is assigned label 0, the second label 1, the third label 2 and so on.
+These labels can be converted to an one-hot encoding, which can be obtained per
+`personalization = new DenseTensor(n).put(cl,1);` where `new DenseTensor(n)` creates a *n*-dimensional vector data structure
+to manipulate vectors provided by the JGNN library and `put(cl, 1)` puts value *1* at position *cl*. 
+For users with unknown classification labels, the personalization vector comprises only zeros and can be constructed per 
+ `personalization = new DenseTensor(n);`, that is without using the put method to assign any values.
+ 
+Although the above formulation refers to non-overlapping classes, in principle the personalization vector can hold any
+non-negative values at its elements, for example obtained as probabilities of .
+ 
+##### PPRMiner to disseminate information
 Then, in each device, the miner needs to be constructed given a unique name (that differentiates between multiple 
 usages by different modules) the contextual ego network instance to attach information to and the personalization vector
-for the device's user per `pprMiner = new PPRMiner(name, contextualEgoNetwork, personalization)`. The personalization can be updated later on through the `pprMiner.updatePersonalization(personalization);` method.
+for the device's user per `pprMiner = new PPRMiner(name, contextualEgoNetwork, personalization)`.
+The personalization can be updated later on through the `pprMiner.updatePersonalization(personalization);` method.
 To further prevent diffusion to change non-zero (i.e. known) personalizations, the PPRMiner can be made to forcefully
 keep known predictions through `miner.setPersonalizationAsGroundTruth(true);`
 
 As a final note, PPRMiners extend the social graph mining class and hence need to exchange parameters with their
 neighbors given the previous communication scheme. For example usage of the PPRMiner, please refer to the
-simulation code at *eu.h2020.helios_social.modules.socialgraphmining.experiments.DecentralizedSimulation.java*.
+simulation code at *eu.h2020.helios_social.modules.socialgraphmining.experiments.DiffusionSimulation.java*.
+For applications that already implement a switchable miner and have implemented a communication scheme for the latter,
+a new PPRMiner instance can be explicitly registered with the following code:
+
+```Java
+
+SwitchableMiner miner = ... ; // obtain the switchable miner
+PPRMiner pprMiner = ...; // the instantiated PPRMiner
+miner.registerMiner(pprMiner.getName(), pprMiner);
+```
+
+In this 
+
+While mining takes place, current estimation of smoothed class scores can be retrieved with `miner.getSmoothedPersonalization();`.
+This returns a vector with equal size to the personalization vector.
 
 
 ## Project Structure

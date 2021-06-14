@@ -23,6 +23,10 @@ public class PPRMiner extends SocialGraphMiner {
 	private double restartProbability = 0.1;
 	private boolean personalizationAsGroundTruth = false;
 	
+	public String getName() {
+		return name;
+	}
+	
 	public PPRMiner(String name, ContextualEgoNetwork contextualEgoNetwork, Tensor personalization) {
 		super(contextualEgoNetwork);
 		if(name==null || name.isEmpty())
@@ -73,6 +77,11 @@ public class PPRMiner extends SocialGraphMiner {
 		return this;
 	}
 	
+	/**
+	 * Copies the elements of a given vector to the ego's personalization vector.
+	 * @param personalization The tensor to set as new personalization vector.
+	 * @return <code>this</code> miner's instance.
+	 */
 	public synchronized PPRMiner updatePersonalization(Tensor personalization) {
 		getContextualEgoNetwork()
 			.getEgo()
@@ -103,11 +112,21 @@ public class PPRMiner extends SocialGraphMiner {
 	}
 	
 	/**
-	 * 
-	 * @return
+	 * Retrieves the outcome of smoothing the outcome of the ego's personalization through the social graph.
+	 * @return A Tensor holding a smoothing of the personalization.
 	 */
 	public synchronized Tensor getSmoothedPersonalization() {
 		return getContextualEgoNetwork().getEgo().getOrCreateInstance(getModuleName()+"score", () -> getPersonalization().copy());
+	}
+
+	/**
+	 * Retrieves the outcome of {@link #getSmoothedPersonalization()} and postprocesses it so that its minimum value is zero
+	 * and its elements sum to 1.
+	 * @return A Tensor holding a normalized version of the smoothed personalization.
+	 */
+	public synchronized Tensor getNormalizedSmoothedPersonalization() {
+		Tensor ret = getSmoothedPersonalization();
+		return ret.add(-ret.min()).setToProbability();
 	}
 	
 	@Override

@@ -49,6 +49,7 @@ public class DiffusionSimulation {
 				if(!devices.containsKey(v))
 					devices.put(v, new Device(createMiner(v, vectorization.getOrCreateId(dataset.getLabel(v)))));
 				devices.get(u).send(devices.get(v));
+				//System.out.println(((PPRMiner)devices.get(u).getMiner()).getNormalizedSmoothedPersonalization());
 			}
 			int acc = 0;
 			for(String u : devices.keySet()) 

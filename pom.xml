@@ -22,7 +22,7 @@
   <dependency>
 	    <groupId>com.github.maniospas</groupId>
 	    <artifactId>JGNN</artifactId>
-	    <version>91c0efdf76</version>
+	    <version>7c100f2e69</version>
 	</dependency>
   <dependency>
     <groupId>junit</groupId>
