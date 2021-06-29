@@ -132,16 +132,22 @@ public class SwitchableMiner extends SocialGraphMiner {
 	@Override
 	public void newInteractionParameters(Interaction interaction, SocialGraphMinerParameters neighborModelParameters, InteractionType interactionType) {
 		locked = true;
-		for(String miner : miners.keySet())
-			miners.get(miner).newInteractionParameters(interaction, neighborModelParameters.getNested(miner), interactionType);
+		for(String miner : miners.keySet()) {
+			SocialGraphMinerParameters receivedParameters = neighborModelParameters.getNested(miner);
+			if(receivedParameters!=null)
+				miners.get(miner).newInteractionParameters(interaction, receivedParameters, interactionType);
+		}
 	}
-
+	
 	@Override
-	public SocialGraphMinerParameters getModelParameterObject(Interaction interaction) {
+	public SocialGraphMinerParameters constructModelParameterObject(Interaction interaction) {
 		locked = true;
 		SocialGraphMinerParameters ret = new SocialGraphMinerParameters();
-		for(Entry<String, SocialGraphMiner> minerEntry : miners.entrySet())
-			ret.put(minerEntry.getKey(), minerEntry.getValue().getModelParameterObject(interaction));
+		for(Entry<String, SocialGraphMiner> minerEntry : miners.entrySet()) {
+				SocialGraphMinerParameters minerParameters = minerEntry.getValue().getModelParameterObject(interaction);
+				if(minerParameters!=null)
+					ret.put(minerEntry.getKey(), minerParameters);
+		}
 		return ret;
 	}
 

@@ -36,6 +36,8 @@ public abstract class SocialGraphMiner {
 	}
 	
 	private ContextualEgoNetwork contextualEgoNetwork;
+	private boolean sendPermision = true;
+	
 	protected SocialGraphMiner(ContextualEgoNetwork contextualEgoNetwork) {
 		if(contextualEgoNetwork==null)
 			throw new IllegalArgumentException();
@@ -55,9 +57,49 @@ public abstract class SocialGraphMiner {
 		Object parameters = neighborModelParameters==null?null:getContextualEgoNetwork().getSerializer().deserializeFromString(neighborModelParameters);
 		newInteractionParameters(interaction, (SocialGraphMinerParameters) parameters, interactionType);
 	}
-	public abstract SocialGraphMinerParameters getModelParameterObject(Interaction interaction);
+
+	/**
+	 * Sets whether the miner is permitted to send parameters when asked to, thus helping write seamless code, especially
+	 * when multiple miner parameters are simultaneously send by {@link SwitchableMiner}. Setting send permisions to <code>true></code>
+	 * makes miners work as intended, but setting them to <code>false</code> would force them to not send parameters
+	 * that would improve recommendations for others.
+	 * @param sendPermision Whether to allow the miner to send parameters.
+	 * @return <code>this</code> miner
+	 */
+	public SocialGraphMiner setSendPermision(boolean sendPermision) {
+		this.sendPermision = sendPermision;
+		return this;
+	}
+
     /**
 	 * Retrieves the parameters of the mining model that will be sent alongside the created interaction.
+	 * This method is wrapped by {@link #getModelParameters(Interaction)} to potentially not construct
+	 * parameters at all, if {@link #setSendPermision(boolean)}.
+     * @param interaction The new interaction the user receives expressed in terms of the contextual ego network
+     * @return A {@link SocialGraphMinerParameters} object of miner parameters.
+     */
+	protected abstract SocialGraphMinerParameters constructModelParameterObject(Interaction interaction);
+	
+    /**
+	 * Retrieves the parameters of the mining model that will be sent alongside the created interaction.
+	 * Prefer use of {@link #getModelParameters(Interaction)} to guarantee correct serialization, though
+	 * the two methods can used interchangeably.
+	 * <b>This functionality can be reduced to sending a <code>null</code> by {@link #setSendPermision(boolean)}
+	 * </b>
+     * @param interaction The new interaction the user receives expressed in terms of the contextual ego network
+     * @return A {@link SocialGraphMinerParameters} object of miner parameters.
+     */
+	public final SocialGraphMinerParameters getModelParameterObject(Interaction interaction) {
+		if(!sendPermision)
+			return null;
+		return constructModelParameterObject(interaction);
+	}
+    /**
+	 * Retrieves the parameters of the mining model that will be sent alongside the created interaction.
+	 * This uses the contextual ego network's serializer to convert the outcome of {@link #getModelParameterObject(Interaction)} 
+	 * to a string representation. The two methods can used interchangeably.
+	 * <b>This functionality can be reduced to sending a serialized <code>null</code> by {@link #setSendPermision(boolean)}
+	 * </b>
      * @param interaction The new interaction the user receives expressed in terms of the contextual ego network
      * @return A String serialization of model parameters.
      */

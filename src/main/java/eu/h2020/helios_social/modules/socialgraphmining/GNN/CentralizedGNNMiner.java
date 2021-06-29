@@ -43,7 +43,7 @@ public class CentralizedGNNMiner extends SocialGraphMiner {
 		
 	}
 	@Override
-	public SocialGraphMinerParameters getModelParameterObject(Interaction interaction) {
+	public SocialGraphMinerParameters constructModelParameterObject(Interaction interaction) {
 		return null;
 	}
 	@Override

@@ -113,7 +113,7 @@ public class GNNMiner extends SocialGraphMiner {
 	 * embeddings calculated on alter devices. Value of 0 produce regularization towards zero,
 	 * which effectively limits the embedding norm to the approximate order of magnitude
 	 * 1/weight, where weight is the value set to {@link #setRegularizationWeight(double)}.
-	 * @param absorbsion
+	 * @param regularizationAbsorbsion
 	 * @return <code>this</code> GNNMiner instance.
 	 */
 	public GNNMiner setRegularizationAbsorbsion(double regularizationAbsorbsion) {
@@ -134,7 +134,7 @@ public class GNNMiner extends SocialGraphMiner {
 	
 	/**
 	 * When the GNNMiner is being trained, training stops at epochs where
-	 * abs(previous epoch loss - this epoch loss) < convergenceRelativeLoss*(this epoch loss)
+	 * abs(previous epoch loss - this epoch loss) &lt; convergenceRelativeLoss*(this epoch loss)
 	 * where losses are weighted cross entropy ones. Default is 0.001.
 	 * @param convergenceRelativeLoss The relative loss at which to stop training.
 	 * @return <code>this</code> GNNMiner instance.
@@ -161,7 +161,7 @@ public class GNNMiner extends SocialGraphMiner {
 	 * Sets the threshold weight at which old training examples are removed (default is 0.1).
 	 * Basically, if the degradation set by set by {@link #setTrainingExampleDegradation} 
 	 * remains constant throughout training iterations, training examples are removed if
-	 * degradation^n < trainingExampleRemovalThreshold
+	 * degradation^n &lt; trainingExampleRemovalThreshold
 	 * where n the number of (positive) examples provided after the examined one with {@link #newInteraction}.
 	 * 
 	 * @param trainingExampleRemovalThreshold The weight threshold at which to remove GNN training examples which is passed as
@@ -386,7 +386,7 @@ public class GNNMiner extends SocialGraphMiner {
 	}
 	
 	@Override
-	public SocialGraphMinerParameters getModelParameterObject(Interaction interaction) {
+	public SocialGraphMinerParameters constructModelParameterObject(Interaction interaction) {
 		if(interaction==null) 
 			return Utils.error("Could not find given context", null);
 		Context context = interaction.getEdge().getContext();

@@ -71,7 +71,7 @@ public class DifferenceMiner extends SocialGraphMiner {
 	}
 
 	@Override
-	public SocialGraphMinerParameters getModelParameterObject(Interaction interaction) {
+	public SocialGraphMinerParameters constructModelParameterObject(Interaction interaction) {
 		SocialGraphMinerParameters ret = new SocialGraphMinerParameters();
 		ret.put("discovery_miner", discoveryMiner.getModelParameterObject(interaction));
 		ret.put("base_miner", baseMiner.getModelParameterObject(interaction));

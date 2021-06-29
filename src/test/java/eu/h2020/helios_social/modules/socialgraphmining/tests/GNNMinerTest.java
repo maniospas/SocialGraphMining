@@ -2,9 +2,14 @@ package eu.h2020.helios_social.modules.socialgraphmining.tests;
 
 import org.junit.Test;
 
+import eu.h2020.helios_social.core.contextualegonetwork.Node;
 import eu.h2020.helios_social.core.contextualegonetwork.Utils;
+import eu.h2020.helios_social.core.contextualegonetwork.listeners.LoggingListener;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNNodeData;
+
+import java.util.Map.Entry;
+
 import org.junit.Assert;
 
 public class GNNMinerTest extends BaseMinerTestFunctionalities {
@@ -63,5 +68,32 @@ public class GNNMinerTest extends BaseMinerTestFunctionalities {
 				.getEmbedding()
 				.toString();
 		Assert.assertTrue(!originalEmbeddingsOfBinA.equals(newEmbeddingsOfBinA));
+	}
+
+	
+	@Test
+	public void shouldNotHaveProblemWithRemovedCENNodes() {
+		getDevice("A").send(getDevice("B"));
+		getDevice("A").send(getDevice("C"));
+		getDevice("A").send(getDevice("B"));
+		getDevice("A").recommendInteractionsInCurrentContext();
+		getDevice("A").getMiner().getContextualEgoNetwork().getCurrentContext().removeNodeIfExists(
+				getDevice("A").getMiner().getContextualEgoNetwork().getOrCreateNode("B"));
+		getDevice("A").recommendInteractionsInCurrentContext();
+		for(Entry<Node, Double> entry : getDevice("A").recommendInteractionsInCurrentContext().entrySet())
+			System.out.println(entry.getKey()+" : "+entry.getValue().toString());
+	}
+	
+	@Test(expected = Exception.class)
+	public void shouldHaveProblemWithnRemovingCurrentContext() {
+			getDevice("A").getMiner().getContextualEgoNetwork().setCurrent(
+					getDevice("A").getMiner().getContextualEgoNetwork().getOrCreateContext("home"));
+			getDevice("A").send(getDevice("B"));
+			getDevice("A").send(getDevice("C"));
+			getDevice("B").send(getDevice("A"));
+			getDevice("C").send(getDevice("A"));
+			getDevice("A").getMiner().getContextualEgoNetwork().removeContext(
+					getDevice("A").getMiner().getContextualEgoNetwork().getOrCreateContext("home"));
+			getDevice("A").recommendInteractionsInCurrentContext();
 	}
 }

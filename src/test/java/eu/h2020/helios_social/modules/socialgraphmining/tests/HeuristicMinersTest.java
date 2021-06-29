@@ -39,4 +39,11 @@ public class HeuristicMinersTest extends BaseMinerTestFunctionalities {
 		Assert.assertEquals(argmax(getDevice("A").recommendInteractionsInCurrentContext()), "B");
 		Assert.assertEquals(argmax(getDevice("D").recommendInteractionsInCurrentContext()), "E");
 	}
+	
+	@Test
+	public void shouldNotHaveProblemWithRemovedCENNodes() {
+		getDevice("A").send(getDevice("B"));
+		getDevice("A").getMiner().getContextualEgoNetwork().removeNodeIfExists("B");
+		getDevice("A").recommendInteractionsInCurrentContext();
+	}
 }

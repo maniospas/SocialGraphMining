@@ -22,7 +22,7 @@ public interface Measure {
 	/**
 	 * Retrieves the last evaluation calculated by {@link #evaluateSend(SocialGraphMiner, Context, Node)}.
 	 * @return The las evaluation score.
-	 * @throws Exception if this method is not implemented.
+	 * @throws RuntimeException if this method is not implemented.
 	 */
 	public default double lastEvaluation() {
 		throw new RuntimeException(this.getClass()+" does not store its evaluations");

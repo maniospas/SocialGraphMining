@@ -154,7 +154,7 @@ public class PPRMiner extends SocialGraphMiner {
 	}
 
 	@Override
-	public SocialGraphMinerParameters getModelParameterObject(Interaction interaction) {
+	public SocialGraphMinerParameters constructModelParameterObject(Interaction interaction) {
 		SocialGraphMinerParameters params = new SocialGraphMinerParameters();
 		params.put("score", getSmoothedPersonalization());
 		return params;

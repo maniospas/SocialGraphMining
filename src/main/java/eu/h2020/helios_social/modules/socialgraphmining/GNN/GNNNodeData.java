@@ -77,7 +77,9 @@ public class GNNNodeData {
 	 * Sets a neighbor aggregation that can be retrieved with {@link #getNeighborAggregation()}. This
 	 * aggregation is computed by other devices and this function is called when receiving it as part
 	 * of the shared parameters. These operations are automatically performed by
-	 * {@link GNNMiner#newInteractionParameters(Interaction, String, InteractionType)}
+	 * {@link GNNMiner#newInteractionParameters(eu.h2020.helios_social.core.contextualegonetwork.Interaction, 
+	 * eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.SocialGraphMinerParameters,
+	 * eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.InteractionType)}
 	 * @param neighborAggregation The received Tensor of neighbor aggregation
 	 */
 	public synchronized void setNeighborAggregation(Tensor neighborAggregation) {

@@ -6,6 +6,27 @@ In particular, each user (or, more precisely, their HELIOS device) carries a dif
 and needs to account for its capabilities to facilitate recommendation tasks. Recommendations are performed on a per-context
 basis and can facilitate various objectives.
 
+### Contents
+1. [Project Structure](#project-structure)<br>
+2. [Installation](#installation)<br>
+2.1. [Jar File installation](#jar-file-installation)<br>
+2.2. [Gradle Installation](#gradle-installation)<br>
+3.3. [Maven Installation](#maven-installation)<br>
+3. [API Usage](#api-usage)<br>
+3.1. [Instantiating graph miners](#instantiating-graph-miners)<br>
+3.2. [Recommending interactions in the current context](#recommending-interactions-in-the-current-context)<br>
+3.3. [Communication scheme](#communication-scheme) - this needs to be implemented<br>
+3.4. [Diffusing predictions through the decentralized social graph](#diffusing-predictions-through-the-decentralized-social-graph)
+
+### Project Structure
+This project contains the following components:
+
+src - The source code files.
+
+doc - Additional documentation files.
+
+jar - Jar file installation.
+
 ## Installation
 [![](https://jitpack.io/v/helios-h2020/h.extension-SocialGraphMining.svg)](https://jitpack.io/#helios-h2020/h.extension-SocialGraphMining)
 This module depends on [eu.h2020.helios_social.core.contextualegonetwork](https://githuBob.com/helios-h2020/h.core-SocialEgoNetwork).
@@ -59,7 +80,7 @@ Then add the dependency:
 ## API Usage
 Here we detail how to develop applications using this module's graph API to provide social graph recommendation capabilities.
 
-### Instantiating the graph miner
+### Instantiating graph miners
 Graph mining capabilities start from a contextual ego network instance. If such an instance is not available,
 it can be created when the application starts with the following code:
 
@@ -109,7 +130,11 @@ Doing this with the contextual ego network management library can be achieved th
 contextualEgoNetwork.setCurrent(contextualEgoNetwork.getOrCreateContext("default"));
 ```
 
-Then, using a social graph miner to obtain social recommendations for nodes of the contextual ego network in the current context can be achieved through the following code:
+:warn: **All** miner parameters (even parameters of non-current miners) are communicated at all times to retain validity
+of mining processes. Explicitly managing miner permisions without altering the switchable miner can be achieved for each individual miner through 
+
+Using a social graph miner to obtain social recommendations for nodes of the contextual ego network in the current context can be achieved through the following code:
+
 ```java
 import eu.h2020.helios_social.core.contextualegonetwork.Context;
 import eu.h2020.helios_social.core.contextualegonetwork.Node;
@@ -117,6 +142,7 @@ import eu.h2020.helios_social.core.contextualegonetwork.Node;
 Context context = contextualEgoNetwork.getCurrentContext(); // can also obtain other contexts to recommend for
 HashMap<Node, Double> interactWithNodeRecommendation = miner.recommendInteractions(context);
 ```
+
 The recommendations are (Node, weight) entries for all nodes in the current context, where weight values lie in the range [0,1]
 with higher ones indicating stronger recommendation for interacting with the respective node. 
 
@@ -219,13 +245,3 @@ In this
 
 While mining takes place, current estimation of smoothed class scores can be retrieved with `miner.getSmoothedPersonalization();`.
 This returns a vector with equal size to the personalization vector.
-
-
-## Project Structure
-This project contains the following components:
-
-src - The source code files.
-
-doc - Additional documentation files.
-
-jar - Jar file installation.

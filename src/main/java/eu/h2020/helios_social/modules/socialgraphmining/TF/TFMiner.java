@@ -145,7 +145,7 @@ public class TFMiner extends SocialGraphMiner {
 	}
 
 	@Override
-	public SocialGraphMinerParameters getModelParameterObject(Interaction interaction) {
+	public SocialGraphMinerParameters constructModelParameterObject(Interaction interaction) {
 		Context context = interaction.getEdge().getContext();
 		SocialGraphMinerParameters params = new SocialGraphMinerParameters();
 		params.put("embedding", context

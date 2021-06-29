@@ -1,7 +1,10 @@
 eu.h2020.helios_social.modules.socialgraphmining
 eu.h2020.helios_social.modules.socialgraphmining.diffusion
-eu.h2020.helios_social.modules.socialgraphmining.examples
+eu.h2020.helios_social.modules.socialgraphmining.experiments
+eu.h2020.helios_social.modules.socialgraphmining.experiments.simulation
 eu.h2020.helios_social.modules.socialgraphmining.GNN
-eu.h2020.helios_social.modules.socialgraphmining.GNN.operations
+eu.h2020.helios_social.modules.socialgraphmining.GNN.simulated_communication
 eu.h2020.helios_social.modules.socialgraphmining.heuristics
 eu.h2020.helios_social.modules.socialgraphmining.measures
+eu.h2020.helios_social.modules.socialgraphmining.tests
+eu.h2020.helios_social.modules.socialgraphmining.TF

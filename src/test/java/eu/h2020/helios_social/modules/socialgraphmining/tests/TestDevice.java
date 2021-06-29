@@ -6,6 +6,7 @@ import java.util.HashMap;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 import eu.h2020.helios_social.core.contextualegonetwork.Node;
+import eu.h2020.helios_social.core.contextualegonetwork.storage.NativeStorage;
 import eu.h2020.helios_social.core.contextualegonetwork.storage.NoStorage;
 import eu.h2020.helios_social.modules.socialgraphmining.SwitchableMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNMiner;
@@ -18,6 +19,7 @@ public class TestDevice {
 	
 	public TestDevice(String name) {
 		contextualEgoNetwork = ContextualEgoNetwork.createOrLoad(new NoStorage("NOFILESYSTEM\\"), name, null);
+		//contextualEgoNetwork = ContextualEgoNetwork.createOrLoad(new NativeStorage("simulations\\"+name+"\\"), name, null);
 		SwitchableMiner miner = new SwitchableMiner(contextualEgoNetwork);
 		miner.createMiner("repeat", RepeatAndReplyMiner.class);
 		miner.createMiner("gnn", GNNMiner.class).setDeniability(0, 0);
