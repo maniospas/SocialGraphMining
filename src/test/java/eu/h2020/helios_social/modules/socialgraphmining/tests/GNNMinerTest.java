@@ -69,7 +69,28 @@ public class GNNMinerTest extends BaseMinerTestFunctionalities {
 				.toString();
 		Assert.assertTrue(!originalEmbeddingsOfBinA.equals(newEmbeddingsOfBinA));
 	}
-
+	
+	@Test
+	public void disablingSendFlagsShouldNotTransferInformation() {
+		getDevice("A").send(getDevice("B"));
+		String originalEmbeddingsOfBinA = getDevice("A").getMiner().getContextualEgoNetwork()
+				.getOrCreateNode("B", null)
+				.getOrCreateInstance(GNNNodeData.class)
+				.getEmbedding()
+				.toString();
+		getDevice("A").getMiner().getActiveMiner().setSendPermision(false);
+		getDevice("B").getMiner().getActiveMiner().setSendPermision(false);
+		getDevice("C").getMiner().getActiveMiner().setSendPermision(false);
+		getDevice("C").send(getDevice("A"));
+		getDevice("B").send(getDevice("A"));
+		getDevice("A").send(getDevice("B"));
+		String newEmbeddingsOfBinA = getDevice("A").getMiner().getContextualEgoNetwork()
+				.getOrCreateNode("B", null)
+				.getOrCreateInstance(GNNNodeData.class)
+				.getEmbedding()
+				.toString();
+		Assert.assertTrue(originalEmbeddingsOfBinA.equals(newEmbeddingsOfBinA));
+	}
 	
 	@Test
 	public void shouldNotHaveProblemWithRemovedCENNodes() {
@@ -80,8 +101,8 @@ public class GNNMinerTest extends BaseMinerTestFunctionalities {
 		getDevice("A").getMiner().getContextualEgoNetwork().getCurrentContext().removeNodeIfExists(
 				getDevice("A").getMiner().getContextualEgoNetwork().getOrCreateNode("B"));
 		getDevice("A").recommendInteractionsInCurrentContext();
-		for(Entry<Node, Double> entry : getDevice("A").recommendInteractionsInCurrentContext().entrySet())
-			System.out.println(entry.getKey()+" : "+entry.getValue().toString());
+		//for(Entry<Node, Double> entry : getDevice("A").recommendInteractionsInCurrentContext().entrySet())
+		//	System.out.println(entry.getKey()+" : "+entry.getValue().toString());
 	}
 	
 	@Test(expected = Exception.class)
