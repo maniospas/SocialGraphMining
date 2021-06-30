@@ -130,7 +130,7 @@ Doing this with the contextual ego network management library can be achieved th
 contextualEgoNetwork.setCurrent(contextualEgoNetwork.getOrCreateContext("default"));
 ```
 
-:warn: **All** miner parameters (even parameters of non-current miners) are communicated at all times to retain validity
+:warning: **All** miner parameters (even parameters of non-current miners) are communicated at all times to retain validity
 of mining processes. Explicitly managing miner permisions without altering the switchable miner can be achieved for each individual miner through 
 
 Using a social graph miner to obtain social recommendations for nodes of the contextual ego network in the current context can be achieved through the following code:
@@ -218,7 +218,7 @@ For users with unknown classification labels, the personalization vector compris
  `personalization = new DenseTensor(n);`, that is without using the put method to assign any values.
  
 Although the above formulation refers to non-overlapping classes, in principle the personalization vector can hold any
-non-negative values at its elements, for example obtained as probabilities of .
+non-negative values at its elements, for example obtained as probabilities of HELIOS users exhibiting any properties.
  
 ##### PPRMiner to disseminate information
 Then, in each device, the miner needs to be constructed given a unique name (that differentiates between multiple 
@@ -241,7 +241,14 @@ PPRMiner pprMiner = ...; // the instantiated PPRMiner
 miner.registerMiner(pprMiner.getName(), pprMiner);
 ```
 
-In this 
 
-While mining takes place, current estimation of smoothed class scores can be retrieved with `miner.getSmoothedPersonalization();`.
-This returns a vector with equal size to the personalization vector.
+While mining takes place, current estimation of smoothed class scores in the current context can be retrieved with 
+`miner.getSmoothedPersonalization(miner.getContextualEgoNetwork().getCurrentContext());`. 
+This returns a vector with equal size to the personalization vector for the current context of the contextual ego network.
+In principle, smoothing outcome is context-aware and thus different results would be obtained for different contexts.
+
+:bulb: To obtain a renormalized version of smoothed classed scores, with minimum zero and which sum to 1, use the method 
+`miner.getNormalizedSmoothedPersonalization(miner.getContextualEgoNetwork().getCurrentContext());`.
+
+
+Smoothed personalizations are different per context
