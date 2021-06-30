@@ -2,7 +2,6 @@ package eu.h2020.helios_social.modules.socialgraphmining.diffusion;
 
 import eu.h2020.helios_social.core.contextualegonetwork.Context;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
-import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetworkListener;
 import eu.h2020.helios_social.core.contextualegonetwork.Edge;
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 import eu.h2020.helios_social.core.contextualegonetwork.Node;
@@ -10,7 +9,6 @@ import eu.h2020.helios_social.core.contextualegonetwork.Utils;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner;
 
 import mklab.JGNN.core.Tensor;
-import mklab.JGNN.core.tensor.DenseTensor;
 
 /**
  * This class implements a Personalized PageRank scheme, where each ego node's personalization
