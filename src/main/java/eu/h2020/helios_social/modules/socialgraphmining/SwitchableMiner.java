@@ -134,8 +134,8 @@ public class SwitchableMiner extends SocialGraphMiner {
 		locked = true;
 		for(String miner : miners.keySet()) {
 			SocialGraphMinerParameters receivedParameters = neighborModelParameters.getNested(miner);
-			if(receivedParameters!=null)
-				miners.get(miner).newInteractionParameters(interaction, receivedParameters, interactionType);
+			//if(receivedParameters!=null)
+			miners.get(miner).newInteractionParameters(interaction, receivedParameters, interactionType);
 		}
 	}
 	

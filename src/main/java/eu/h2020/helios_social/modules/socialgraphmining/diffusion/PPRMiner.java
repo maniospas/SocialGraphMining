@@ -1,7 +1,5 @@
 package eu.h2020.helios_social.modules.socialgraphmining.diffusion;
 
-import java.util.List;
-
 import eu.h2020.helios_social.core.contextualegonetwork.Context;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetworkListener;

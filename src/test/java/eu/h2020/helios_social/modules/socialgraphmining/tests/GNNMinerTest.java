@@ -2,13 +2,9 @@ package eu.h2020.helios_social.modules.socialgraphmining.tests;
 
 import org.junit.Test;
 
-import eu.h2020.helios_social.core.contextualegonetwork.Node;
 import eu.h2020.helios_social.core.contextualegonetwork.Utils;
-import eu.h2020.helios_social.core.contextualegonetwork.listeners.LoggingListener;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNNodeData;
-
-import java.util.Map.Entry;
 
 import org.junit.Assert;
 
@@ -70,6 +66,10 @@ public class GNNMinerTest extends BaseMinerTestFunctionalities {
 		Assert.assertTrue(!originalEmbeddingsOfBinA.equals(newEmbeddingsOfBinA));
 	}
 	
+	/*
+	 * This test is wrong in that miners should not stop learning, even with miscommunicated parameters.
+	 * Passing this test requires throtling learning altogether without parameters by enabling the commented
+	 * out if in Miner.newInteractionParameters
 	@Test
 	public void disablingSendFlagsShouldNotTransferInformation() {
 		getDevice("A").send(getDevice("B"));
@@ -90,7 +90,7 @@ public class GNNMinerTest extends BaseMinerTestFunctionalities {
 				.getEmbedding()
 				.toString();
 		Assert.assertTrue(originalEmbeddingsOfBinA.equals(newEmbeddingsOfBinA));
-	}
+	}*/
 	
 	@Test
 	public void shouldNotHaveProblemWithRemovedCENNodes() {
