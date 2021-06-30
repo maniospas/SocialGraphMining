@@ -36,12 +36,6 @@ public class PPRMiner extends SocialGraphMiner {
 			Utils.error(new IllegalArgumentException());
 		this.name = name;
 		updatePersonalization(personalization);
-		contextualEgoNetwork.addListener(new ContextualEgoNetworkListener() {
-			@Override
-			public void onCreateContext(Context context) {
-				updatePersonalization(context, defaultPersonalization);
-			}
-		});
 	}
 	
 	/**
@@ -73,9 +67,9 @@ public class PPRMiner extends SocialGraphMiner {
 	 * random walk with restart scheme has average random walk length equal to 1/(restart probability).
 	 * <br>
 	 * Suggested values to experiment with:<br>
-	 * - 0.15 (used in older personalized PageRank papers)
-	 * - 0.10 (default, used by graph neural networks to great success)
-	 * - 0.01 (extremely long walks, suitable to detect communities of high radius from few examples)
+	 * - 0.15 (used in older personalized PageRank papers)<br>
+	 * - 0.10 (default, used by graph neural networks to great success)<br>
+	 * - 0.01 (extremely long walks, suitable to detect communities of high radius from few examples)<br>
 	 * @param restartProbability The restart probability in the range (0,1) (default is 0.1).
 	 * @return <code>this</code> miner's instance.
 	 */
@@ -131,7 +125,7 @@ public class PPRMiner extends SocialGraphMiner {
 	 * @return The personalization vector.
 	 */
 	public Tensor getPersonalization(Context context) {
-		return context.getOrCreateInstance(getModuleName()+"personalization", DenseTensor.class);
+		return context.getOrCreateInstance(getModuleName()+"personalization", () -> defaultPersonalization.copy());
 	}
 	
 	/**
