@@ -241,14 +241,17 @@ PPRMiner pprMiner = ...; // the instantiated PPRMiner
 miner.registerMiner(pprMiner.getName(), pprMiner);
 ```
 
-
+##### Retrieving diffused scores
 While mining takes place, current estimation of smoothed class scores in the current context can be retrieved with 
-`miner.getSmoothedPersonalization(miner.getContextualEgoNetwork().getCurrentContext());`. 
-This returns a vector with equal size to the personalization vector for the current context of the contextual ego network.
-In principle, smoothing outcome is context-aware and thus different results would be obtained for different contexts.
+`pprMiner.getSmoothedPersonalization(miner.getContextualEgoNetwork().getCurrentContext());`. 
+This returns a vector with equal size to the personalization vector that holds the outcome of diffusion
+for the current context of the contextual ego network. In principle, smoothing outcome is context-aware and thus 
+different results would be obtained for different contexts.
 
 :bulb: To obtain a renormalized version of smoothed classed scores, with minimum zero and which sum to 1, use the method 
-`miner.getNormalizedSmoothedPersonalization(miner.getContextualEgoNetwork().getCurrentContext());`.
+`pprMiner.getNormalizedSmoothedPersonalization(miner.getContextualEgoNetwork().getCurrentContext());`. Different normalizations
+can be obtained using the Tensor operations of the JGNN library.
 
+:warning: Personalization scores should have the **same size** (i.e. the same number of elements) across all HELIOS devices
+using the same miner.
 
-Smoothed personalizations are different per context

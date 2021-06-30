@@ -122,7 +122,7 @@ public class PPRMiner extends SocialGraphMiner {
 	 * @return The module name's prefix.
 	 */
 	protected String getModuleName() {
-		return name;
+		return getClass().getCanonicalName()+"#"+name+".";
 	}	
 	
 	/**
