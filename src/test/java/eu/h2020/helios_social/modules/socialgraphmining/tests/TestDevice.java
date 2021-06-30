@@ -6,12 +6,13 @@ import java.util.HashMap;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 import eu.h2020.helios_social.core.contextualegonetwork.Node;
-import eu.h2020.helios_social.core.contextualegonetwork.storage.NativeStorage;
 import eu.h2020.helios_social.core.contextualegonetwork.storage.NoStorage;
 import eu.h2020.helios_social.modules.socialgraphmining.SwitchableMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.GNN.GNNMiner;
+import eu.h2020.helios_social.modules.socialgraphmining.diffusion.PPRMiner;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.InteractionType;
 import eu.h2020.helios_social.modules.socialgraphmining.heuristics.RepeatAndReplyMiner;
+import mklab.JGNN.core.tensor.DenseTensor;
 
 public class TestDevice {
 	private ContextualEgoNetwork contextualEgoNetwork;
@@ -23,6 +24,7 @@ public class TestDevice {
 		SwitchableMiner miner = new SwitchableMiner(contextualEgoNetwork);
 		miner.createMiner("repeat", RepeatAndReplyMiner.class);
 		miner.createMiner("gnn", GNNMiner.class).setDeniability(0, 0);
+		miner.registerMiner("diffusion", new PPRMiner("diffusion", contextualEgoNetwork, new DenseTensor(10).setToRandom()));
 		this.miner = miner;
 		miner.setActiveMiner("gnn");
 		contextualEgoNetwork.setCurrent(contextualEgoNetwork.getOrCreateContext("default"));

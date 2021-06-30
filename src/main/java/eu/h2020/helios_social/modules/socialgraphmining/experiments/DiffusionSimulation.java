@@ -18,7 +18,8 @@ public class DiffusionSimulation {
 	
 	protected static PPRMiner createMiner(String deviceName, int classificationId) {
 		ContextualEgoNetwork cen = ContextualEgoNetwork.createOrLoad(new NoStorage("NOFILESYSTEM\\"), deviceName, null);
-		return new PPRMiner("prediction diffusion", cen, Math.random()<fractionOfKnownLabels?new DenseTensor(15).put(classificationId, 1):new DenseTensor(15));
+		return new PPRMiner("prediction diffusion", cen, 
+				Math.random()<fractionOfKnownLabels?new DenseTensor(15).put(classificationId, 1):new DenseTensor(15));
 	}
 	
 	public static long argmax(Tensor tensor) {
@@ -53,7 +54,8 @@ public class DiffusionSimulation {
 			}
 			int acc = 0;
 			for(String u : devices.keySet()) 
-				if(argmax(((PPRMiner)devices.get(u).getMiner()).getSmoothedPersonalization())
+				if(argmax(((PPRMiner)devices.get(u).getMiner())
+						.getSmoothedPersonalization(devices.get(u).getMiner().getContextualEgoNetwork().getCurrentContext()))
 						== vectorization.getOrCreateId(dataset.getLabel(u)))
 					acc += 1;
 			System.out.println("Epoch "+epoch+" accuracy "+acc/(float)devices.size());

@@ -1,7 +1,11 @@
 package eu.h2020.helios_social.modules.socialgraphmining.diffusion;
 
+import java.util.List;
+
 import eu.h2020.helios_social.core.contextualegonetwork.Context;
 import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetwork;
+import eu.h2020.helios_social.core.contextualegonetwork.ContextualEgoNetworkListener;
+import eu.h2020.helios_social.core.contextualegonetwork.Edge;
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 import eu.h2020.helios_social.core.contextualegonetwork.Node;
 import eu.h2020.helios_social.core.contextualegonetwork.Utils;
@@ -13,8 +17,8 @@ import mklab.JGNN.core.tensor.DenseTensor;
 /**
  * This class implements a Personalized PageRank scheme, where each ego node's personalization
  * is a vector (modeled by a JGNN library Tensor) passed to the constructor and which is smoothed over
- * the decentralized social graph. Smoothing outcome is obtained through the method
- * {@link #getSmoothedPersonalization()}.
+ * the decentralized social graph. Smoothing outcome for contexts is obtained through the method
+ * {@link #getSmoothedPersonalization(Context)}.
  * 
  * @author Emmanouil Krasanakis
  */
@@ -22,6 +26,7 @@ public class PPRMiner extends SocialGraphMiner {
 	private String name;
 	private double restartProbability = 0.1;
 	private boolean personalizationAsGroundTruth = false;
+	private Tensor defaultPersonalization;
 	
 	public String getName() {
 		return name;
@@ -33,6 +38,12 @@ public class PPRMiner extends SocialGraphMiner {
 			Utils.error(new IllegalArgumentException());
 		this.name = name;
 		updatePersonalization(personalization);
+		contextualEgoNetwork.addListener(new ContextualEgoNetworkListener() {
+			@Override
+			public void onCreateContext(Context context) {
+				updatePersonalization(context, defaultPersonalization);
+			}
+		});
 	}
 	
 	/**
@@ -76,18 +87,34 @@ public class PPRMiner extends SocialGraphMiner {
 		this.restartProbability = restartProbability;
 		return this;
 	}
-	
+
 	/**
-	 * Copies the elements of a given vector to the ego's personalization vector.
+	 * Copies the elements of a given vector to the ego's personalization vector in the provided context.
+	 * @param context The context in which to set the new personalization vector.
 	 * @param personalization The tensor to set as new personalization vector.
 	 * @return <code>this</code> miner's instance.
+	 * @see #updatePersonalization(Tensor)
 	 */
-	public synchronized PPRMiner updatePersonalization(Tensor personalization) {
-		getContextualEgoNetwork()
-			.getEgo()
+	public synchronized PPRMiner updatePersonalization(Context context, Tensor personalization) {
+		context
 			.getOrCreateInstance(getModuleName()+"personalization", ()->personalization.zeroCopy())
 			.setToZero()
 			.selfAdd(personalization);
+		updateSmoothedPersonalization(context);
+		return this;
+	}
+	
+	/**
+	 * Wraps the method {@link #updatePersonalization(Context, Tensor)} to update <b>all</b>
+	 * contexts with the given personalization. The given personalization is also automatically
+	 * initialized for <b>future</b> context generations.
+	 * @param personalization The tensor to set as new personalization vector in all contexts.
+	 * @return <code>this</code> miner's instance.
+	 */
+	public PPRMiner updatePersonalization(Tensor personalization) {
+		defaultPersonalization = personalization;
+		for(Context context : getContextualEgoNetwork().getContexts())
+			updatePersonalization(context, personalization);
 		return this;
 	}
 	
@@ -98,25 +125,24 @@ public class PPRMiner extends SocialGraphMiner {
 	 */
 	protected String getModuleName() {
 		return name;
-	}
+	}	
 	
 	/**
-	 * Retrieves the personalization 
+	 * Retrieves the ego node's personalization set for the <b>specific</b> context.
+	 * Changing the output tensor is equivalent to changing the personalization.
 	 * @return The personalization vector.
-	 * @see #updatePersonalization(Tensor)
 	 */
-	public Tensor getPersonalization() {
-		return getContextualEgoNetwork()
-				.getEgo()
-				.getOrCreateInstance(getModuleName()+"personalization", DenseTensor.class);
+	public Tensor getPersonalization(Context context) {
+		return context.getOrCreateInstance(getModuleName()+"personalization", DenseTensor.class);
 	}
 	
 	/**
 	 * Retrieves the outcome of smoothing the outcome of the ego's personalization through the social graph.
+	 * Changing the output tensor temporarilly affects the personalization.
 	 * @return A Tensor holding a smoothing of the personalization.
 	 */
-	public synchronized Tensor getSmoothedPersonalization() {
-		return getContextualEgoNetwork().getEgo().getOrCreateInstance(getModuleName()+"score", () -> getPersonalization().copy());
+	public synchronized Tensor getSmoothedPersonalization(Context context) {
+		return context.getOrCreateInstance(getModuleName()+"score", () -> getPersonalization(context).copy());
 	}
 
 	/**
@@ -124,9 +150,12 @@ public class PPRMiner extends SocialGraphMiner {
 	 * and its elements sum to 1.
 	 * @return A Tensor holding a normalized version of the smoothed personalization.
 	 */
-	public synchronized Tensor getNormalizedSmoothedPersonalization() {
-		Tensor ret = getSmoothedPersonalization();
-		return ret.add(-ret.min()).setToProbability();
+	public synchronized Tensor getNormalizedSmoothedPersonalization(Context context) {
+		Tensor ret = getSmoothedPersonalization(context);
+		double min = ret.min();
+		if(min==ret.max())
+			min = 0;// if it's a uniform distribution return a uniform distribution
+		return ret.add(-min).setToProbability();
 	}
 	
 	@Override
@@ -136,27 +165,34 @@ public class PPRMiner extends SocialGraphMiner {
 		Tensor neighborScore = (Tensor) neighborModelParameters.get("score");
 		interaction
 			.getEdge()
-			.getAlter()
 			.getOrCreateInstance(getModuleName()+"score", ()->neighborScore.zeroCopy())
 			.setToZero()
 			.selfAdd(neighborScore);
-		
-		//it's impossible for numNodes to be 0 at this point, since an interaction has occurred
-		if(!personalizationAsGroundTruth || getPersonalization().norm()!=0) {
-			int numNodes = interaction.getEdge().getContext().getNodes().size();
-			Tensor score = getSmoothedPersonalization().setToZero().selfAdd(getPersonalization()).selfMultiply(numNodes*restartProbability/(1-restartProbability));
-			for(Node node : interaction.getEdge().getContext().getNodes()) 
-				score.selfAdd(node.getOrCreateInstance(getModuleName()+"score", ()->score.zeroCopy()));
+		updateSmoothedPersonalization(interaction.getEdge().getContext());
+	}
+	
+	protected void updateSmoothedPersonalization(Context context) {
+		int numNodes = context.getNodes().size();
+		if(numNodes!=0 && (!personalizationAsGroundTruth || getPersonalization(context).norm()==0)) {
+			Tensor score = getSmoothedPersonalization(context)
+					.setToZero()
+					.selfAdd(getPersonalization(context))
+					.selfMultiply(numNodes*restartProbability/(1-restartProbability));
+			for(Edge edge : context.getEdges()) 
+				if(edge.getEgo()!=null)
+					score.selfAdd(edge.getOrCreateInstance(getModuleName()+"score", ()->score.zeroCopy()));
 			score.selfMultiply((1-restartProbability)/numNodes);
 		}
 		else
-			getSmoothedPersonalization().setToZero().selfAdd(getPersonalization());
+			getSmoothedPersonalization(context)
+				.setToZero()
+				.selfAdd(getPersonalization(context));
 	}
 
 	@Override
 	public SocialGraphMinerParameters constructModelParameterObject(Interaction interaction) {
 		SocialGraphMinerParameters params = new SocialGraphMinerParameters();
-		params.put("score", getSmoothedPersonalization());
+		params.put("score", getSmoothedPersonalization(interaction.getEdge().getContext()));
 		return params;
 	}
 
