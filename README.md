@@ -3,8 +3,10 @@
 ## Introduction
 This module aims to provide dynamic machine learning capabilities to HELIOS users.
 In particular, each user (or, more precisely, their HELIOS device) carries a different instance of this module 
-and needs to account for its capabilities to facilitate recommendation tasks. Recommendations are performed on a per-context
-basis and can facilitate various objectives.
+and needs to account for its capabilities to facilitate recommendation tasks. Recommendations are performed on a
+per-context basis and can facilitate various objectives.
+
+**Documentation:** [github pages](https://helios-h2020.github.io/h.extension-SocialGraphMining/)
 
 ### Contents
 1. [Project Structure](#project-structure)<br>
@@ -21,9 +23,9 @@ basis and can facilitate various objectives.
 ### Project Structure
 This project contains the following components:
 
-src - The source code files.
+src - Source code files.
 
-doc - Additional documentation files.
+docs - Code documentation files.
 
 jar - Jar file installation.
 
@@ -147,16 +149,16 @@ The recommendations are (Node, weight) entries for all nodes in the current cont
 with higher ones indicating stronger recommendation for interacting with the respective node. 
 
 ### Communication scheme
-A requirement for using the social graph mining algorithms is that they need to exchange information when social interactions occur. **Not doing so will considerably worsen the quality of some mining algorithms**, especially those based on graph diffusion or GNNs. Our design 
+A requirement for using the social graph mining algorithms is that they need to exchange information when social interactions occur. **Not doing so will considerably impact the quality of some mining algorithms**, especially those based on graph diffusion or GNNs. Our design 
 requires little communication (i.e. three information exchanges), only when the interactions occur and of few parameters (e.g. at worst, expect 100 double numbers converted to strings).
 
 :bulb: Switchable miners automatically exchange parameters for all registered miners. As such, the following communication protocol
 needs to be implemented **only** for the switchable miner holding all application miners.
 
-Our algorithms assume that, when the user of a device *A* initiates a social interaction towards the user of a device *B* the following communication steps are followed:
+Our algorithms assume that, when the user of a device *Alice* initiates a social interaction towards the user of a device *Bob* the following communication steps are followed:
 
 ##### First step (SEND)
-*A* creates an interaction in its instance of the contextual ego network retrieves a set of parameters (parametersOfAlice) from its miner given that interaction:
+*Alice* creates an interaction in its instance of the contextual ego network retrieves a set of parameters (parametersOfAlice) from its miner given that interaction:
 ```java
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 
@@ -166,10 +168,10 @@ Interaction interaction = Alice.contextualEgoNetwork
 				.addDetectedInteraction(null);
 String parametersOfAlice = Alice.miner.getModelParameters(interaction);
 ```
-Then *A* sends to *B* its parameters (e.g. by attaching them on the sent message or immediately after the sent message).
+Then *Alice* sends to *Bob* its parameters (e.g. by attaching them on the sent message or immediately after the sent message).
 
 ##### Second step (RECEIVE)
-*B* receives the parameters of *A* (parametersOfAlice), creates a new interaction on its instance of the contextual ego network, notifies its miner about the receive and creates a new set of parameters (parametersOfBob):
+*Bob* receives the parameters of *Alice* (parametersOfAlice), creates a new interaction on its instance of the contextual ego network, notifies its miner about the receive and creates a new set of parameters (parametersOfBob):
 ```java
 import eu.h2020.helios_social.core.contextualegonetwork.Interaction;
 import eu.h2020.helios_social.modules.socialgraphmining.SocialGraphMiner.InteractionType;
@@ -181,7 +183,7 @@ Interaction interaction = Bob.contextualEgoNetwork
 Bob.miner.newInteraction(interaction, parametersOfAlice, InteractionType.RECEIVE);
 String parametersOfBob = miner.getModelParameters(interaction);
 ```
-Then *B* sends back to *A* its parameters (e.g. by attaching to a receive acknowledgement message).
+Then *Bob* sends back to *Alice* its parameters (e.g. by attaching to a receive acknowledgement message).
 
 ##### Third step (RECEIVE_ACK)
 *Alice* receives the parameters of *Bob* (parametersOfBob), retrieves the interaction these refer to and notifies its miner about the update:
